@@ -2,17 +2,11 @@
 """
 
 -------------------------------------------------
-   File Name:         solvers
-   Description :      Wrapped solvers for financial models 各类金融模型的求解器
-   Author :           linhengyang @ guotaijunan
+   File Name:         OptSolvers
+   Description :      Wrapped solvers for financial allocator 各类金融权重分配模型的求解器
+   Author :           linhengyang
    Create date:       2023/12/11
    Latest version:    v1.0.0
--------------------------------------------------
-   Change Log:
-#-----------------------------------------------#
-    v1.0.0            lhy        2023/12/11
-    1.
-#-----------------------------------------------#
 -------------------------------------------------
 
 """
