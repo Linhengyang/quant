@@ -25,10 +25,11 @@ def set_axes(axes, xlabel, ylabel, xlim, ylim, xscale, yscale, legend):
     axes.grid()
 
 
-def plot(X, Y=None,
-         xlabel=None, ylabel=None, legend=None, xlim=None,
-         ylim=None, xscale='linear', yscale='linear',
-         fmts=('-', 'm--', 'g-.', 'r:'), figsize=(3.5, 2.5), axes=None):
+def plot(X, Y=None, # 输入 x-series or list of x-serieses, y-series or list of y-serieses, plot 对应的多个或一个series
+         xlabel=None, ylabel=None, legend=None, # legend: list of series names
+         xlim=None, ylim=None, xscale='linear', yscale='linear',
+         fmts=('-', 'm--', 'g-.', 'r:'), # 可拓展, 如果有超过 4个serieses要展示，需要拓展fmts
+         figsize=(3.5, 2.5), axes=None):
     """绘制数据点"""
     if legend is None:
         legend = []
@@ -65,7 +66,11 @@ def display_save(fname):
 
 
 if __name__ == "__main__":
-    X = np.random.uniform(0, 1, size=(3,))
-    Y = np.random.uniform(1, 2, size=(3,))
-    plot(X, Y)
+    X1 = np.random.uniform(0, 1, size=(5,))
+    Y1 = np.random.uniform(1, 2, size=(5,))
+    X2 = np.linspace(0, 1, num=10)
+    Y2 = 2 * np.linspace(0, 1, num=10)
+    X = [X1, X2]
+    Y = [Y1, Y2]
+    plot(X, Y, legend=['random', 'linear'])
     display_save("plt_test.png")
