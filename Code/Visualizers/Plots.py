@@ -66,11 +66,16 @@ def display_save(fname):
 
 
 if __name__ == "__main__":
+    # 画散点
     X1 = np.random.uniform(0, 1, size=(5,))
     Y1 = np.random.uniform(1, 2, size=(5,))
+    # 画函数
     X2 = np.linspace(0, 1, num=10)
     Y2 = 2 * np.linspace(0, 1, num=10)
-    X = [X1, X2]
-    Y = [Y1, Y2]
-    plot(X, Y, legend=['random', 'linear'])
+    # 画单点
+    X3 = np.array([0.5])
+    Y3 = np.array([0.5])
+    X = [X1, X2, X3]
+    Y = [Y1, Y2, Y3]
+    plot(X, Y, legend=['random', 'linear', 'point'], fmts=('-', 'm--', 'o'))
     display_save("plt_test.png")
