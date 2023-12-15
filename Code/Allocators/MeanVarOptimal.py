@@ -2,8 +2,8 @@
 """
 
 -------------------------------------------------
-   File Name:         OptSolvers
-   Description :      Wrapped solvers for financial allocator 各类金融权重分配模型的求解器
+   File Name:         MeanVarOptimal
+   Description :      均值-方差最优化：给定预期收益率/波动率，求解波动率/预期收益率最优化的portfolio
    Author :           linhengyang
    Create date:       2023/12/11
    Latest version:    v1.0.0

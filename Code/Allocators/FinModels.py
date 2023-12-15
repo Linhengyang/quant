@@ -1,1 +1,1 @@
-from OptSolvers import MeanVarOpt
+from Code.Allocators.MeanVarOptimal import MeanVarOpt
