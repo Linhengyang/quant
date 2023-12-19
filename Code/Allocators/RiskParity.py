@@ -23,9 +23,16 @@ def loan_only_constraint(x):
 class RiskParity:
     def __init__(self, asset_r_mat:np.array, category_mat:np.array=None, tgt_contrib_ratio:np.array=None):
         self.asset_r_mat = asset_r_mat
+        self.num_assets = asset_r_mat.shape[0] # 资产个数
+
         self.cov_mat = np.cov(asset_r_mat)
+
         self.tgt_contrib_ratio = tgt_contrib_ratio
         self.category_mat = category_mat
+
+        if category_mat is not None and tgt_contrib_ratio is not None:
+            assert category_mat.shape[0] == len(tgt_contrib_ratio), 'Asset category numbers must match'
+
         if category_mat is not None:
             self.num_risk = category_mat.shape[0]
         else:
@@ -41,6 +48,7 @@ class RiskParity:
         # tgt_contrib_ratio: 希望各资产/风险因子/资产类别 风险贡献的目标比例。不输入时，默认各资产/风险因子/资产类别平均分担总风险
         if tgt_contrib_ratio is None:
             tgt_contrib_ratio = np.array([ 1.0/self.num_risk ]*self.num_risk)
+
         assert len(tgt_contrib_ratio) == self.num_risk, "risk_contribs and tgt_contrib_ratio must have same length"
         assert np.abs( tgt_contrib_ratio.sum() - 1 ) <= 0.01, "tgt_contrib_ratio must be summed to 1"
         # 使用risk_contribs 和 tgt_contrib_ratio 对比, 得到最优化objective函数
@@ -56,9 +64,8 @@ class RiskParity:
     
     @staticmethod
     def cal_risk_contribs(w:np.array, V:np.array, category_mat=None):
-        num_assets = len(w)
         if category_mat is None:
-            category_mat = np.eye(num_assets)
+            return w * (V @ w)
         assert len( np.unique( category_mat.sum(axis=0) ) ) == 1 and np.unique( category_mat.sum(axis=0) )[0] == 1, \
         "Category Matrix must satisfy column sum shall be 1"
         return category_mat @ (w * (V @ w))
@@ -76,7 +83,7 @@ class RiskParity:
         pass
 
     def optimal_solver(self):
-        w0 = np.array([1/self.num_risk ] * self.num_risk ) # 初始值 均分
+        w0 = np.array([1/self.num_assets ] * self.num_assets ) # 初始值 均分
         cons = ({'type': 'eq', 'fun': total_weight_constraint},
                 {'type': 'ineq', 'fun':loan_only_constraint})
         res = scipy.optimize.minimize(self.obj_func_on_assets, w0, args=[self.cov_mat, self.category_mat, self.tgt_contrib_ratio],\
@@ -93,6 +100,9 @@ if __name__ == "__main__":
     x3 = np.random.uniform(low=-3, high=3, size=(1, 180))
     x = np.concatenate([x1, x2, x3], axis=0)
     fin = RiskParity(x,
+                     category_mat = np.array([[1,1,1,0,0,0],
+                                              [0,0,0,1,1,0],
+                                              [0,0,0,0,0,1]]),
                      tgt_contrib_ratio= np.array([1/6]*6)
                      )
     print(fin.optimal_solver())
