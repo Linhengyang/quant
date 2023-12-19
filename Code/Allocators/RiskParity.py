@@ -45,6 +45,9 @@ class RiskParity:
         # 返回 w @ V @ w.T
         return (w @ V @ w).item()
     
+    @property
+    def portf_return(self):
+        return self.allocated_weights @ self.asset_r_mat.mean(axis=1)
     
     def cal_optimal_obj(self, risk_contribs:np.array, tgt_contrib_ratio:np.array=None):
         # risk_contribs: 各资产/风险因子/资产类别 的trc向量, 即各资产/风险因子/资产类别贡献的风险。
@@ -118,3 +121,4 @@ if __name__ == "__main__":
     w_rb = fin.optimal_solver()
     print('asset weights: ', w_rb)
     print('risk contributions: ', fin.risk_contribs)
+    print('portf return: ', fin.portf_return)
