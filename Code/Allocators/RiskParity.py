@@ -43,6 +43,7 @@ class RiskParity:
         # 返回 w @ V @ w.T
         return (w @ V @ w).item()
     
+    
     def cal_optimal_obj(self, risk_contribs:np.array, tgt_contrib_ratio:np.array=None):
         # risk_contribs: 各资产/风险因子/资产类别 的trc向量, 即各资产/风险因子/资产类别贡献的风险。
         # tgt_contrib_ratio: 希望各资产/风险因子/资产类别 风险贡献的目标比例。不输入时，默认各资产/风险因子/资产类别平均分担总风险
@@ -70,6 +71,10 @@ class RiskParity:
         "Category Matrix must satisfy column sum shall be 1"
         return category_mat @ (w * (V @ w))
     
+    @property
+    def risk_contribs(self):
+        return self.cal_risk_contribs(self.allocated_weights, self.cov_mat, self.category_mat)
+    
     def obj_func_on_assets(self, w, params):
         # params最少包括1个参数，最多包括3个参数，分别是：
         # 1：V 资产的covariance矩阵
@@ -88,8 +93,10 @@ class RiskParity:
                 {'type': 'ineq', 'fun':loan_only_constraint})
         res = scipy.optimize.minimize(self.obj_func_on_assets, w0, args=[self.cov_mat, self.category_mat, self.tgt_contrib_ratio],\
                                       method='SLSQP', constraints=cons, options={'disp':True})
-        w_rb = np.asmatrix(res.x)
-        return w_rb
+        self.allocated_weights = res.x
+        return res.x
+    
+
 
 
 
@@ -103,6 +110,8 @@ if __name__ == "__main__":
                      category_mat = np.array([[1,1,1,0,0,0],
                                               [0,0,0,1,1,0],
                                               [0,0,0,0,0,1]]),
-                     tgt_contrib_ratio= np.array([1/6]*6)
+                     tgt_contrib_ratio= np.array([1/3]*3)
                      )
-    print(fin.optimal_solver())
+    w_rb = fin.optimal_solver()
+    print('asset weights: ', w_rb)
+    print('risk contributions: ', fin.risk_contribs)
