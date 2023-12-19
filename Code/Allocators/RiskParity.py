@@ -11,6 +11,7 @@
 
 """
 import scipy
+import scipy.optimize as scipyopt
 import numpy as np
 
 def total_weight_constraint(x):
@@ -24,6 +25,7 @@ class RiskParity:
     def __init__(self, asset_r_mat:np.array, category_mat:np.array=None, tgt_contrib_ratio:np.array=None):
         self.asset_r_mat = asset_r_mat
         self.num_assets = asset_r_mat.shape[0] # 资产个数
+        self.allocated_weights = None # 初始化资产权重
 
         self.cov_mat = np.cov(asset_r_mat)
 
@@ -91,8 +93,9 @@ class RiskParity:
         w0 = np.array([1/self.num_assets ] * self.num_assets ) # 初始值 均分
         cons = ({'type': 'eq', 'fun': total_weight_constraint},
                 {'type': 'ineq', 'fun':loan_only_constraint})
-        res = scipy.optimize.minimize(self.obj_func_on_assets, w0, args=[self.cov_mat, self.category_mat, self.tgt_contrib_ratio],\
-                                      method='SLSQP', constraints=cons, options={'disp':True})
+        res = scipyopt.minimize(self.obj_func_on_assets, w0,
+                                args=[self.cov_mat, self.category_mat, self.tgt_contrib_ratio],
+                                method='SLSQP', constraints=cons, options={'disp':True})
         self.allocated_weights = res.x
         return res.x
     
