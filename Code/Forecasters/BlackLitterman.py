@@ -4,7 +4,7 @@ import numpy as np
 
 
 # 贝叶斯观点下的对资产收益率向量的预测
-class blacklitterman:
+class BlackLitterman:
     '''
     Black-Litterman模型，归根结底是利用贝叶斯理论，给出了一种融合「当前/均衡/客观现状」和「新信息/动向/主观观点」，以「预测」的办法。
     其中「当前/均衡/客观现状」对应「先验/prior」，「新信息/动向/主观观点」对应「采样/sampling」，「预测」对应「后验/posterior」。
