@@ -80,7 +80,7 @@ class BlackLitterman:
 
     #### build BL model
 
-    def get_BL_rtn_vec(self, args_dict):
+    def __call__(self, args_dict):
         self.set_prior_rtn_vec(args_dict)
         self.set_prior_cov_precs_mat(args_dict)
         self.set_view_cov_precs_mat(args_dict)
@@ -148,4 +148,4 @@ if __name__ == "__main__":
                  'tau':0.05}
     
     print('current returns: ', hist_rtn_series.mean(axis=1))
-    print( 'BL expected returns: ', bl_model.get_BL_rtn_vec(args_dict) )
+    print( 'BL expected returns: ', bl_model(args_dict) )
