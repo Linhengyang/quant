@@ -46,6 +46,8 @@ class BlackLitterman:
             self._prior_precs_mat = np.linalg.inv(self._prior_cov_mat)
         elif method == 'other':
             raise NotImplementedError('other method for assets prior covariance & precision matrix not implemented')
+        else:
+            raise ValueError('unknown method {}'.format(method))
     
     @property
     def prior_precs_mat(self):
@@ -69,6 +71,8 @@ class BlackLitterman:
             raise NotImplementedError('confidence method for view covariance & precision matrix not implemented')
         elif method == 'residual-variance':
             raise NotImplementedError('residual-variance method for view covariance & precision matrix not implemented')
+        else:
+            raise ValueError('Unknown method {}'.format(method))
 
     @property
     def view_var_mat(self):
