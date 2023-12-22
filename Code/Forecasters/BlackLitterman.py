@@ -85,7 +85,7 @@ class BlackLitterman:
         self.set_prior_cov_precs_mat(args_dict)
         self.set_view_cov_precs_mat(args_dict)
         return self.EXPE_return_BL(self._prior_precs_mat, self._prior_rtn_vec, self._view_pick_mat, self._view_precs_mat, self._view_rtn_vec)
-
+    
     #### compute functions
 
     @staticmethod
@@ -131,7 +131,21 @@ class BlackLitterman:
 
 
 if __name__ == "__main__":
-    A = np.zeros((3, 3), int)
-    np.fill_diagonal(A, 0.00000000000001)
+    np.random.seed(100)
+    hist_rtn_series = np.random.uniform(-1, 1, size=(5, 180))
+    hist_cov_mat = np.cov(hist_rtn_series)
+    risk_avers_factor = 0.3
+    equi_wght_vec = np.array([0.03, 0.1, 0.2, 0.08, 0.12])
 
-    print( np.allclose(A, 0.0) )
+    view_pick_mat = np.array([[1, -1, 0, 0, 0],
+                              [0, 0, 1, -0.5, -0.5]])
+    view_rtn_vec = np.array([0.01, 0.03])
+
+    bl_model = BlackLitterman(view_pick_mat, view_rtn_vec)
+    args_dict = {'risk_avers_factor':risk_avers_factor,
+                 'equi_wght_vec':equi_wght_vec,
+                 'hist_cov_mat':hist_cov_mat,
+                 'tau':0.05}
+    
+    print('current returns: ', hist_rtn_series.mean(axis=1))
+    print( 'BL expected returns: ', bl_model.get_BL_rtn_vec(args_dict) )
