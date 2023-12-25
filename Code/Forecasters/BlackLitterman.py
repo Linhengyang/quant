@@ -11,17 +11,19 @@ class BlackLitterman:
     多维正态分布的贝叶斯估计：https://stats.stackexchange.com/questions/28744/multivariate-normal-posterior
     BL模型预测资产的收益率向量
     '''
-    def __init__(self, view_pick_mat:np.ndarray, view_rtn_vec:np.ndarray):
+    def __init__(self, view_pick_mat:np.ndarray, view_rtn_vec:np.ndarray, normalize=False):
         # views
-        assert self.view_pick_mat_row_orthog_check(view_pick_mat), '观点pick矩阵必须是行正交的'
-        self.view_pick_mat_raw = view_pick_mat
-        self.view_rtn_vec_raw = view_rtn_vec
+        self._view_pick_mat_orthog_flag = self.view_pick_mat_row_orthog_check(view_pick_mat) # 观点矩阵是否正交
         self._view_var_mat = None # Omega
         self._view_precs_mat = None # 是 view_var_mat 的 inverse
         # normalization
-        normalize = np.diag( np.sqrt( np.diag( view_pick_mat @ view_pick_mat.T ) ) )
-        self._view_pick_mat = normalize @ view_pick_mat
-        self._view_rtn_vec = normalize @ view_rtn_vec
+        if normalize:
+            normalize = np.diag( np.sqrt( np.diag( view_pick_mat @ view_pick_mat.T ) ) )
+            self._view_pick_mat = normalize @ view_pick_mat
+            self._view_rtn_vec = normalize @ view_rtn_vec
+        else:
+            self._view_pick_mat =  view_pick_mat
+            self._view_rtn_vec = view_rtn_vec
         # priors
         self._prior_cov_mat = None # Phi0
         self._prior_precs_mat = None # 是 prior_cov_mat 的 inverse
@@ -32,7 +34,11 @@ class BlackLitterman:
             self._prior_rtn_vec = self.equi_rtn_vec(args_dict['risk_avers_factor'], args_dict['hist_cov_mat'], args_dict['equi_wght_vec'])
         elif method == 'other':
             raise NotImplementedError('other method for assets prior return vector not implemented')
-        
+    
+    @property
+    def view_pick_mat_orthog_flag(self):
+        return self._view_pick_mat_orthog_flag
+
     @property
     def prior_rtn_vec(self):
         return self._prior_rtn_vec

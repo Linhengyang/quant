@@ -105,7 +105,6 @@ class RiskParity:
 
 
 
-
 if __name__ == "__main__":
     np.random.seed(10)
     x1 = np.random.uniform(low=-1, high=1, size=(3, 180))
