@@ -23,7 +23,7 @@ template_folder = 'Template'
 app = Flask(app_name, static_folder=static_folder, template_folder=template_folder)
 
 
-## request.args：针对GET方法，从URL中获取参数
+## request.args：针对GET方法，从request中获取参数 kv-args
 @app.route('/')
 def hello():
     print(request.path)
@@ -38,7 +38,7 @@ def user_page(name):
     return f'user name {escape(name)}'
 
 
-# request.stream 和 request.form：针对POST方法，从requests中获取表单数据
+# request.stream 和 request.form：针对POST方法，从request中获取表单数据 form data
 @app.route('/register', methods=['POST'])
 def register():
     print(request.headers)
@@ -48,7 +48,7 @@ def register():
     return 'welcome'
 
 
-# 
+# request.json：针对POST方法，从request中获取json数据 json data
 @app.route('/add', methods=['POST'])
 def add():
     print(request.headers)
