@@ -58,7 +58,7 @@ class BlackLitterman:
     @property
     def prior_precs_mat(self):
         return self._prior_precs_mat
-
+    
     @property
     def prior_cov_mat(self):
         return self._prior_cov_mat
