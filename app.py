@@ -17,8 +17,6 @@ from Code.Estimators import Risks
 warnings.filterwarnings('ignore')
 app = Flask(__name__)
 
-# @app.route('/')
-# def hello():
-#     return 'Welcome to My test flask!'
-
-print(__name__)
+@app.route('/hello')
+def hello():
+    return 'Welcome to My test flask!'
