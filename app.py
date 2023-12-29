@@ -4,6 +4,7 @@ import json
 import re
 import warnings
 from datetime import datetime
+from markupsafe import escape
 from pprint import pprint
 import traceback
 import sys
@@ -20,3 +21,8 @@ app = Flask(__name__)
 @app.route('/hello')
 def hello():
     return 'Welcome to My test flask!'
+
+@app.route('/hello/<name>')
+def user_page(name):
+    return f'user name {escape(name)}'
+
