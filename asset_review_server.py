@@ -191,3 +191,14 @@ def application_riskbudget():
     print('output: ')
     pprint(res)
     return res
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    app.run(port=8000, debug=True)
