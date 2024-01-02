@@ -38,26 +38,31 @@ def load_data_blkltm(view_pick_mat, view_rtn_vec, bl_args_dict, low_constraints,
 
 def mvopt_portf_var_from_r(mvopt:MeanVarOpt, r:np.float32):
     var_star, weights_star = mvopt.get_portf_var_from_r(r)
-    res = {'portf_var':var_star, 'portf_w':weights_star}
+    res = {'portf_var':var_star, 'portf_w':list(weights_star)}
     return res
 
 
 def mvopt_portf_r_from_var(mvopt:MeanVarOpt, var:np.float32):
     r_star, weights_star = mvopt.get_portf_r_from_var(var)
-    res = {'portf_r':r_star, 'portf_w':weights_star}
+    res = {'portf_r':r_star, 'portf_w':list(weights_star)}
     return res
 
 
 def mvopt_constrained_qp_from_r(mvopt:MeanVarOpt, goal_r:np.float32):
     # {"portf_w":np_array, "portf_var":float,
     #  "portf_r":float,    "qp_status":string}
-    return mvopt.solve_constrained_qp_from_r(goal_r)
-
+    solution = mvopt.solve_constrained_qp_from_r(goal_r)
+    res = {'portf_w':list(solution['portf_w']), 'portf_var':solution['portf_var'],
+           'portf_r':solution['portf_r'], "qp_status":solution['qp_status']}
+    return res
 
 def mvopt_constrained_qp_from_var(mvopt:MeanVarOpt, goal_var:np.float32):
     # {"portf_w":np_array, "portf_var":float,
     #  "portf_r":float,    "qp_status":string}
-    return mvopt.solve_constrained_qp_from_var(goal_var)
+    solution = mvopt.solve_constrained_qp_from_var(goal_var)
+    res = {'portf_w':list(solution['portf_w']), 'portf_var':solution['portf_var'],
+           'portf_r':solution['portf_r'], "qp_status":solution['qp_status']}
+    return res
 
 # risk parity
 def load_data_riskparity(category_mat, rtn_data_loader:Callable, **data_kwargs):
