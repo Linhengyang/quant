@@ -95,7 +95,7 @@ class MeanVarOpt:
                 "Minimum expected variance for current combination of assets is {}".format(1.0 / self.c))
         r_star = self.a/self.c +\
                  np.sqrt( self.d/self.c * ( var + self.a*self.a/(self.d*self.c) - self.b/self.d ) )
-        weights_star = self.get_portf_var_from_r(r_star)
+        _, weights_star = self.get_portf_var_from_r(r_star)
         return (r_star, weights_star)
 
     # 考虑不等式约束，根据给定的预期收益率r(即满足至少要r的预期收益率)，求解portfolio波动最小的protf权重，以及此时的var
@@ -144,12 +144,12 @@ if __name__ == "__main__":
 
     low_constraints = np.array([0.0]*num_assets)
     high_constraints = np.array([1.0] * num_assets)
-    constraints = [low_constraints, high_constraints]
+    constraints = [None, None]
     # constraints = []
     model = MeanVarOpt(expct_rtn_rate_vec, expct_cov_mat, *constraints)
     # print(model.get_portf_var_from_r(goal_r=0.020017337450874609))
     # result = model.solve_constrained_qp_from_r(goal_r=0.020017337450874608 )
-    result = model.solve_constrained_qp_from_var(goal_var=5.342786287220995)
+    result = model.get_portf_r_from_var(var=5.342786287220995)
     print( result )
 
 
