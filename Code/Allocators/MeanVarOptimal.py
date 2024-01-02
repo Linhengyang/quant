@@ -142,10 +142,10 @@ if __name__ == "__main__":
     # 预期资产收益率的协方差矩阵（方差矩阵）：在这里直接使用历史收益率的协方差矩阵作为预测
     expct_cov_mat = h_cov_mat
 
-    # low_constraints = np.array([0.0]*num_assets)
-    # high_constraints = np.array([1.0] * num_assets)
-    # constraints = [low_constraints, high_constraints]
-    constraints = []
+    low_constraints = np.array([0.0]*num_assets)
+    high_constraints = np.array([1.0] * num_assets)
+    constraints = [low_constraints, high_constraints]
+    # constraints = []
     model = MeanVarOpt(expct_rtn_rate_vec, expct_cov_mat, *constraints)
     # print(model.get_portf_var_from_r(goal_r=0.020017337450874609))
     # result = model.solve_constrained_qp_from_r(goal_r=0.020017337450874608 )
