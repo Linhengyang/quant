@@ -25,14 +25,17 @@ def load_data_mvopt(low_constraints, high_constraints, rtn_data_loader:Callable,
 #                 'tau':0.05}
 def load_data_blkltm(view_pick_mat, view_rtn_vec, bl_args_dict, low_constraints, high_constraints, 
                      rtn_data_loader:Callable, **data_kwargs):
-    rtn_data = rtn_data_loader(**data_kwargs)
-    bl_args_dict['hist_cov_mat'] = np.cov(rtn_data)
-    bl_model = BlackLitterman(view_pick_mat, view_rtn_vec)
-    expct_rtn_rates = bl_model(bl_args_dict)
     if low_constraints is not None:
         low_constraints = np.array(low_constraints)
     if high_constraints is not None:
         high_constraints = np.array(high_constraints)
+    view_pick_mat = np.array(view_pick_mat)
+    view_rtn_vec = np.array(view_rtn_vec)
+    rtn_data = rtn_data_loader(**data_kwargs)
+    bl_args_dict['hist_cov_mat'] = np.cov(rtn_data)
+    bl_args_dict['equi_wght_vec'] = np.array(bl_args_dict['equi_wght_vec'])
+    bl_model = BlackLitterman(view_pick_mat, view_rtn_vec)
+    expct_rtn_rates = bl_model(bl_args_dict)
     return MeanVarOpt(expct_rtn_rates, bl_args_dict['hist_cov_mat'], low_constraints, high_constraints)
 
 
@@ -82,5 +85,5 @@ def load_data_riskbudget(category_mat, tgt_contrib_ratio, rtn_data_loader:Callab
 
 def risk_ctrl(rp:RiskParity):
     portf_w = rp.optimal_solver()
-    res = {'portf_r':rp.portf_return, 'risk_contribs':rp.risk_contribs, 'portf_w':portf_w}
+    res = {'portf_r':rp.portf_return, 'risk_contribs':list(rp.risk_contribs), 'portf_w':list(portf_w)}
     return res
