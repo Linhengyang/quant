@@ -17,7 +17,9 @@ import cvxopt
 ## 均值-方差最优化求解器
 class MeanVarOpt:
     def __init__(self, expct_rtn_rates:np.array, expct_cov_mat:np.array,
-                 low_constraints:np.array=None, high_constraints:np.array=None):
+                 low_constraints:np.array=None, high_constraints:np.array=None,
+                 assets_inds:list=[]):
+        self.assets_inds = assets_inds # 记录资产的排列
         # 检查条件0: 预期收益率向量长度等于协方差矩阵的维度
         assert len(expct_rtn_rates) == expct_cov_mat.shape[0], "Assets number conflicts between returns & covariance"
         self.expct_rtn_rates = expct_rtn_rates

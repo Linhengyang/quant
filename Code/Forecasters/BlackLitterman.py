@@ -11,7 +11,8 @@ class BlackLitterman:
     多维正态分布的贝叶斯估计：https://stats.stackexchange.com/questions/28744/multivariate-normal-posterior
     BL模型预测资产的收益率向量
     '''
-    def __init__(self, view_pick_mat:np.ndarray, view_rtn_vec:np.ndarray, normalize=False):
+    def __init__(self, view_pick_mat:np.ndarray, view_rtn_vec:np.ndarray, normalize=False, assets_inds:list=[]):
+        self.assets_inds = assets_inds # 记录资产的排列
         # views
         self._view_pick_mat_orthog_flag = self.view_pick_mat_row_orthog_check(view_pick_mat) # 观点矩阵是否正交
         self._view_var_mat = None # Omega
