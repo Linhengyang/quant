@@ -10,7 +10,7 @@ import traceback
 import sys
 sys.dont_write_bytecode = True
 
-from Code.projs.asset_review import *
+from Code.projs.asset_allocate import *
 from Code.DataLoaders.random4test import rdm_rtn_data
 
 warnings.filterwarnings('ignore')

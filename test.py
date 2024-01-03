@@ -1,4 +1,4 @@
-from Code.projs.asset_review import *
+from Code.projs.asset_allocate import *
 
 if __name__ == "__main__":
     np.random.seed(100)
