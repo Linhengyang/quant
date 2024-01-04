@@ -4,22 +4,22 @@ import json
 import pandas as pd
 import numpy as np 
 
-remotedb = {
-    'ip':'xx.xxx.xxx.xx',
-    'port':0000,
-    'user':'xxxxxx',
-    'pwd':'xxxxx',
-    'db':'xxxx'
-}
+# remotedb = {
+#     'ip':'xx.xxx.xxx.xx',
+#     'port':0000,
+#     'user':'xxxxxx',
+#     'pwd':'xxxxx',
+#     'db':'xxxx'
+# }
 
-localdb = {
-    'path':''
-}
+# localdb = {
+#     'path':''
+# }
 
 
 class DatabaseConnection:
-    def __init__(self) -> None:
-        self.db_dict = localdb
+    def __init__(self, dbinfo) -> None:
+        self.db_dict = dbinfo
 
     def GetSQL(self, sql_query, tbl_type='pddf'):
         if 'ip' in self.db_dict:
@@ -27,7 +27,7 @@ class DatabaseConnection:
             #                        password=self.db_dict['pwd'], database=self.db_dict['db'])
             pass
         else:
-            conn = sqlite3.connect(localdb)
+            conn = sqlite3.connect(self.db_dict['path'])
         cursor = conn.cursor()
         cursor.execute(sql_query)
         data = cursor.fetchall()
