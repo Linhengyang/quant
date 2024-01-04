@@ -1,7 +1,6 @@
 from Code.Forecasters.BlackLitterman import BlackLitterman
 from Code.Allocators.MeanVarOptimal import MeanVarOpt
 from Code.Allocators.RiskParity import RiskParity
-from Code.DataLoaders.random4test import rdm_rtn_data
 
 import numpy as np
 from typing import Callable
