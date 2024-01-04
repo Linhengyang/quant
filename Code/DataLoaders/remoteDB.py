@@ -5,11 +5,13 @@ from Code.DataLoaders.dbconnect import DatabaseConnection
 
 
 
-
+localdb = {
+    'path':'Data/aidx.db'
+}
 
 
 def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate):
-    db = DatabaseConnection()
+    db = DatabaseConnection(localdb)
     assert len(assets) > 0, 'assets index list must not be empty'
     assert int(startdate) <= int(enddate), 'start date must no later than end date'
     sql_query = '''
