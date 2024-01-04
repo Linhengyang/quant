@@ -9,8 +9,9 @@ import numpy as np
 
 
 
-inputs = {'num_assets':5, 'back_window_size':180,
-          'expt_rtn_rate':1.6,
+inputs = {
+          'num_assets':5, 'back_window_size':180,
+          'expt_rtn_rate':0.05,
           'expt_var':5.5,
           'view_pick_mat':[[1, -1, 0, 0, 0],
                            [0, 0, 1, -0.5, -0.5],
@@ -23,7 +24,11 @@ inputs = {'num_assets':5, 'back_window_size':180,
           'category_mat':[[1,1,0,0,0],
                           [0,0,1,1,0],
                           [0,0,0,0,1]],
-          'tgt_contrib_ratio':[0.6, 0.3, 0.1]
+          'tgt_contrib_ratio':[0.5, 0.3, 0.2],
+          'assets_idx':['000001.SH', '000016.SH', '000002.SH', '000009.SH', '000010.SH'],
+          'startdate':'20230201',
+          'enddate':'20230301',
+          'rtn_dilate':100
           }
-r = requests.post("http://127.0.0.1:8000/riskbudget", json=inputs) # post data
+r = requests.post("http://127.0.0.1:8000/mvopt_var_from_r", json=inputs) # post data
 print(r.text)
