@@ -57,12 +57,12 @@ class MeanVarOpt:
     def _build_quad_program(self):
         # 组建带不等式约束的二次规划所需要的参数（除了预期收益率参数b）
         ## P: 二次规划-目标函数中的正定矩阵
-        self._P = self.expct_cov_mat
+        self._P = self.expct_cov_mat.astype(np.float64)
         ## q: 二次规划-目标函数中的一次项系数
-        self._q = np.zeros_like(self.expct_rtn_rates)
+        self._q = np.zeros_like(self.expct_rtn_rates).astype(np.float64)
         ## A: 二次规划-等式约束中的系数矩阵.有两个等式约束：1、以未定元为权重的加权预期收益率为goal_rtn_rate_portf，2、未定元相加之和为1
         ## 第1个约束要等到goal_rtn_rate_portf加进来之后
-        self._A = np.stack( [self.expct_rtn_rates, np.ones_like(self.expct_rtn_rates)], axis=0)
+        self._A = np.stack( [self.expct_rtn_rates, np.ones_like(self.expct_rtn_rates)], axis=0).astype(np.float64)
         ## G: 二次规划-不等式约束中的系数矩阵. 有两个不等式约束：1、下限，2、上限
         self._num_assets = len(self.expct_rtn_rates)
 
@@ -73,8 +73,8 @@ class MeanVarOpt:
         else: # 上下限都未给 或 上下限都已给出，不作处理
             pass
         if self.low_constraints is not None and self.high_constraints is not None:
-            self._G = np.concatenate( [-np.eye(self._num_assets), np.eye(self._num_assets)], axis=0)
-            self._h = np.concatenate( [-self.low_constraints, self.high_constraints], axis=0)
+            self._G = np.concatenate( [-np.eye(self._num_assets), np.eye(self._num_assets)], axis=0).astype(np.float64)
+            self._h = np.concatenate( [-self.low_constraints, self.high_constraints], axis=0).astype(np.float64)
         else: # 上下限都未给时，默认为无不等式约束
             self._G = None
             self._h = None
@@ -106,7 +106,7 @@ class MeanVarOpt:
             raise ValueError(
                 "Minimum expected return rate for current combination of assets is {}".format(self.a / self.c))
         self.goal_rtn_rate_portf = goal_r
-        self._b = np.array([self.goal_rtn_rate_portf, 1.0])
+        self._b = np.array([self.goal_rtn_rate_portf, 1.0]).astype(np.float64)
         qp_args = [self._P, self._q, self._G, self._h, self._A, self._b]
         qp_args = [cvxopt.matrix(i) if i is not None else None for i in qp_args]
         qp_result = cvxopt.solvers.qp(*qp_args)
@@ -120,7 +120,7 @@ class MeanVarOpt:
             raise ValueError(
                 "Minimum expected variance for current combination of assets is {}".format(1.0 / self.c))
         self.goal_rtn_rate_portf = self.get_portf_r_from_var(goal_var)[0]
-        self._b = np.array([self.goal_rtn_rate_portf, 1.0])
+        self._b = np.array([self.goal_rtn_rate_portf, 1.0]).astype(np.float64)
         qp_args = [self._P, self._q, self._G, self._h, self._A, self._b]
         qp_args = [cvxopt.matrix(i) if i is not None else None for i in qp_args]
         qp_result = cvxopt.solvers.qp(*qp_args)
