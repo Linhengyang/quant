@@ -18,8 +18,8 @@ localdb = {
 
 
 class DatabaseConnection:
-    def __init__(self, dbinfo) -> None:
-        self.db_dict = dbinfo
+    def __init__(self) -> None:
+        self.db_dict = localdb
 
     def GetSQL(self, sql_query, tbl_type='pddf'):
         if 'ip' in self.db_dict:
