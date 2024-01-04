@@ -15,6 +15,8 @@ def csv2sqliteDB(csv_path, db_path, tbl_name):
 
 
 
+
+
 if __name__ == '__main__':
     csv_path = 'AIDX.csv'
     db_path = 'aidx.db'
