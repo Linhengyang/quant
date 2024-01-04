@@ -9,7 +9,7 @@ remotedb = {
     'port':0000,
     'user':'xxxxxx',
     'pwd':'xxxxx',
-    'db':'tydb'
+    'db':'xxxx'
 }
 
 localdb = {
