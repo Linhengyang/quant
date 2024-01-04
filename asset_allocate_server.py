@@ -12,7 +12,7 @@ sys.dont_write_bytecode = True
 
 from Code.projs.asset_allocate import *
 from Code.DataLoaders.random4test import rdm_rtn_data
-# from Code.DataLoaders.remoteDB import db_rtn_data
+from Code.DataLoaders.remoteDB import db_rtn_data
 
 warnings.filterwarnings('ignore')
 app_name = __name__
@@ -40,8 +40,10 @@ def application_mvopt_var_from_r():
         high_constraints = None
     try:
         mvopt = load_data_mvopt(low_constraints, high_constraints,
-                                rtn_data_loader=rdm_rtn_data,
-                                num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                # rtn_data_loader=rdm_rtn_data,
+                                # num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                rtn_data_loader=db_rtn_data, assets=inputs['assets_idx'],
+                                startdate=inputs['startdate'], enddate=inputs['enddate'], rtn_dilate=inputs['rtn_dilate']
                                 )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_var_from_r(mvopt, inputs['expt_rtn_rate'])
@@ -73,8 +75,10 @@ def application_mvopt_r_from_var():
         high_constraints = None
     try:
         mvopt = load_data_mvopt(low_constraints, high_constraints,
-                                rtn_data_loader=rdm_rtn_data,
-                                num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                # rtn_data_loader=rdm_rtn_data,
+                                # num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                rtn_data_loader=db_rtn_data, assets=inputs['assets_idx'],
+                                startdate=inputs['startdate'], enddate=inputs['enddate'], rtn_dilate=inputs['rtn_dilate']
                                 )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_r_from_var(mvopt, inputs['expt_var'])
@@ -104,10 +108,12 @@ def application_blkltm_var_from_r():
     else:
         high_constraints = None
     try:
-        mvopt = load_data_blkltm(inputs['view_pick_mat'], inputs['view_rtn_vec'], inputs, 
+        mvopt = load_data_blkltm(inputs['view_pick_mat'], inputs['view_rtn_vec'], inputs,
                                  low_constraints, high_constraints,
-                                 rtn_data_loader=rdm_rtn_data, 
-                                 num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                #  rtn_data_loader=rdm_rtn_data, 
+                                #  num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                 rtn_data_loader=db_rtn_data, assets=inputs['assets_idx'],
+                                 startdate=inputs['startdate'], enddate=inputs['enddate'], rtn_dilate=inputs['rtn_dilate']
                                 )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_var_from_r(mvopt, inputs['expt_rtn_rate'])
@@ -140,8 +146,10 @@ def application_blkltm_r_from_var():
     try:
         mvopt = load_data_blkltm(inputs['view_pick_mat'], inputs['view_rtn_vec'], inputs, 
                                  low_constraints, high_constraints,
-                                 rtn_data_loader=rdm_rtn_data, 
-                                 num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                #  rtn_data_loader=rdm_rtn_data, 
+                                #  num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                rtn_data_loader=db_rtn_data, assets=inputs['assets_idx'],
+                                startdate=inputs['startdate'], enddate=inputs['enddate'], rtn_dilate=inputs['rtn_dilate']
                                 )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_r_from_var(mvopt, inputs['expt_var'])
@@ -169,8 +177,10 @@ def application_riskparity():
         category_mat = None
     try:
         rp = load_data_riskparity(category_mat,
-                                  rtn_data_loader=rdm_rtn_data,
-                                  num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                #   rtn_data_loader=rdm_rtn_data,
+                                #   num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                  rtn_data_loader=db_rtn_data, assets=inputs['assets_idx'],
+                                  startdate=inputs['startdate'], enddate=inputs['enddate'], rtn_dilate=inputs['rtn_dilate']
                                 )
         res = risk_ctrl(rp)
     except Exception as e:
@@ -195,8 +205,10 @@ def application_riskbudget():
         category_mat = None
     try:
         rp = load_data_riskbudget(category_mat, inputs['tgt_contrib_ratio'],
-                                  rtn_data_loader=rdm_rtn_data,
-                                  num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                #   rtn_data_loader=rdm_rtn_data,
+                                #   num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                  rtn_data_loader=db_rtn_data, assets=inputs['assets_idx'],
+                                  startdate=inputs['startdate'], enddate=inputs['enddate'], rtn_dilate=inputs['rtn_dilate']
                                 )
         res = risk_ctrl(rp)
     except Exception as e:
