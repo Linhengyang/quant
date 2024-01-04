@@ -12,6 +12,7 @@ sys.dont_write_bytecode = True
 
 from Code.projs.asset_allocate import *
 from Code.DataLoaders.random4test import rdm_rtn_data
+# from Code.DataLoaders.remoteDB import db_rtn_data
 
 warnings.filterwarnings('ignore')
 app_name = __name__
@@ -19,6 +20,7 @@ static_folder = "Static"
 template_folder = 'Template'
 
 app = Flask(app_name, static_folder=static_folder, template_folder=template_folder)
+
 
 @app.route('/mvopt_var_from_r', methods=['POST'])
 def application_mvopt_var_from_r():
@@ -38,7 +40,9 @@ def application_mvopt_var_from_r():
         high_constraints = None
     try:
         mvopt = load_data_mvopt(low_constraints, high_constraints,
-                                rdm_rtn_data, num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size'])
+                                rtn_data_loader=rdm_rtn_data,
+                                num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_var_from_r(mvopt, inputs['expt_rtn_rate'])
         else:
@@ -69,7 +73,9 @@ def application_mvopt_r_from_var():
         high_constraints = None
     try:
         mvopt = load_data_mvopt(low_constraints, high_constraints,
-                                rdm_rtn_data, num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size'])
+                                rtn_data_loader=rdm_rtn_data,
+                                num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_r_from_var(mvopt, inputs['expt_var'])
         else:
@@ -100,7 +106,9 @@ def application_blkltm_var_from_r():
     try:
         mvopt = load_data_blkltm(inputs['view_pick_mat'], inputs['view_rtn_vec'], inputs, 
                                  low_constraints, high_constraints,
-                                 rdm_rtn_data, num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size'])
+                                 rtn_data_loader=rdm_rtn_data, 
+                                 num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_var_from_r(mvopt, inputs['expt_rtn_rate'])
         else:
@@ -132,7 +140,9 @@ def application_blkltm_r_from_var():
     try:
         mvopt = load_data_blkltm(inputs['view_pick_mat'], inputs['view_rtn_vec'], inputs, 
                                  low_constraints, high_constraints,
-                                 rdm_rtn_data, num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size'])
+                                 rtn_data_loader=rdm_rtn_data, 
+                                 num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                )
         if low_constraints is None and high_constraints is None:
             res = mvopt_portf_r_from_var(mvopt, inputs['expt_var'])
         else:
@@ -159,7 +169,9 @@ def application_riskparity():
         category_mat = None
     try:
         rp = load_data_riskparity(category_mat,
-                                  rdm_rtn_data, num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size'])
+                                  rtn_data_loader=rdm_rtn_data,
+                                  num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                )
         res = risk_ctrl(rp)
     except Exception as e:
         traceback.print_exc()
@@ -182,8 +194,10 @@ def application_riskbudget():
     else:
         category_mat = None
     try:
-        rp = load_data_riskbudget(category_mat, inputs['tgt_contrib_ratio'], 
-                                  rdm_rtn_data, num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size'])
+        rp = load_data_riskbudget(category_mat, inputs['tgt_contrib_ratio'],
+                                  rtn_data_loader=rdm_rtn_data,
+                                  num_assets=inputs['num_assets'], back_window_size=inputs['back_window_size']
+                                )
         res = risk_ctrl(rp)
     except Exception as e:
         traceback.print_exc()
