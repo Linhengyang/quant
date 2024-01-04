@@ -1,7 +1,7 @@
 import sqlite3
 
 localdb = {
-    "path":"../Data/aidx.db"
+    "path":"aidx.db"
 }
 
 
