@@ -1,6 +1,7 @@
 from Code.projs.asset_allocate import *
+from Code.DataLoader.random4test import rdm_rtn_data
 
-if __name__ == "__main__":
+def test_blkltm_rdmdata():
     np.random.seed(100)
     num_assets = 5
     back_window_size = 180
