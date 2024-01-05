@@ -1,4 +1,4 @@
-from Code.projs.asset_allocate import *
+from Code.projs.asset_allocate.functions import *
 from Code.DataLoader.random4test import rdm_rtn_data
 
 def test_blkltm_rdmdata():
