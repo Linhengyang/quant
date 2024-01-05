@@ -1,6 +1,6 @@
-from Code.Forecasters.BlackLitterman import BlackLitterman
-from Code.Allocators.MeanVarOptimal import MeanVarOpt
-from Code.Allocators.RiskParity import RiskParity
+from Code.Forecaster.BlackLitterman import BlackLitterman
+from Code.Allocator.MeanVarOptimal import MeanVarOpt
+from Code.Allocator.RiskParity import RiskParity
 
 import numpy as np
 from typing import Callable

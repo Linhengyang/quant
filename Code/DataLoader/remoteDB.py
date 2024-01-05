@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np
 # from datetime import datetime, timedelta
-from Code.DataLoaders.dbconnect import DatabaseConnection
+from Code.DataLoader.dbconnect import DatabaseConnection
 
 # remotedb = {
 #     'ip':'xx.xxx.xxx.xx',

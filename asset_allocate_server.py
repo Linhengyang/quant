@@ -11,8 +11,8 @@ import sys
 sys.dont_write_bytecode = True
 
 from Code.projs.asset_allocate import *
-from Code.DataLoaders.random4test import rdm_rtn_data
-from Code.DataLoaders.remoteDB import db_rtn_data
+from Code.DataLoader.random4test import rdm_rtn_data
+from Code.DataLoader.remoteDB import db_rtn_data
 
 warnings.filterwarnings('ignore')
 app_name = __name__
