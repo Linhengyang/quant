@@ -26,9 +26,13 @@ inputs = {
         #                   [0,0,0,0,1]],
         #   'tgt_contrib_ratio':[0.5, 0.3, 0.2],
           'assets_idx':['000001.SH', '000016.SH', '000002.SH', '000009.SH', '000010.SH'],
-          'startdate':'20230101',
-          'enddate':'20230401',
-          'rtn_dilate':100
+          # 'startdate':'20230101',
+          # 'enddate':'20230401',
+          'rtn_dilate':100,
+          'begindate':'20230101',
+          'termidate':'20230401',
+          'gapday':10,
+          'back_window_size':30
           }
-r = requests.post("http://127.0.0.1:8000/mvopt_var_from_r", json=inputs) # post data
+r = requests.post("http://127.0.0.1:8000/BT_mvopt_var_from_r", json=inputs) # post data
 print(r.text)
