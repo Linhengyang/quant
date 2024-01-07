@@ -46,6 +46,28 @@ def application_mvopt_var_from_r():
     return res
 
 
+# @app.route('/BT_mvopt_var_from_r', methods=['POST'])
+# def BT_mvopt_var_from_r():
+#     print('[{}]'.format(datetime.now()))
+#     inputs = request.json
+#     print('Back Test for mean-variance-optimal strategy from {startdate} to {enddate} trading in every {gapday} upon assets {assets}'.format(
+#         startdate=inputs['startdate'], enddate=inputs['enddate'], gapday=inputs['gapday'], assets=inputs['assets_ids']
+#     ))
+#     print('input params: ', inputs)
+#     if 'low_constraints' in inputs:
+#         low_constraints = inputs['low_constraints']
+#     else:
+#         low_constraints = None
+#     if 'high_constraints' in inputs:
+#         high_constraints = inputs['high_constraints']
+#     else:
+#         high_constraints = None
+    
+#     portf_w_list, period_rtn_mat_list = [], []
+    
+
+
+
 
 @app.route('/mvopt_r_from_var', methods=['POST'])
 def application_mvopt_r_from_var():
