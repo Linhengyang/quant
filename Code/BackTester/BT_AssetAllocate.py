@@ -2,7 +2,10 @@ import numpy as np
 from typing import Callable
 
 def rtn_period(portf_w:np.array, period_rtn_mat:np.array):
-    assert len(portf_w) == len(period_rtn_mat), 'asset weight array & asset return matrix in period must have same length'
+    assert len(portf_w) == len(period_rtn_mat),\
+        'asset weight array with size {w_size} must match return matrix in period with asset size {rtn_size}'.format(
+            w_size=len(portf_w), rtn_size=len(period_rtn_mat)
+            )
     rtn_array = np.prod((1 + period_rtn_mat), axis=1) - 1
     return (portf_w @ rtn_array)
 
@@ -63,6 +66,8 @@ def rtn_multi_periods(portf_w_list:list, period_rtn_mat_list:list, trade_cost_li
                                                     A
                             in days_1 + days_2 + days_3 period
     '''
+    assert len(portf_w_list) == len(period_rtn_mat_list),\
+        'portfolio weight allocations {w} not match actual return matrix records {r}'.format(w=len(portf_w_list), r=len(period_rtn_mat_list))
     rtn_list = []
     trade_days = 0
     for portf_w, period_rtn_mat in zip(portf_w_list, period_rtn_mat_list):
