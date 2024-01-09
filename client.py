@@ -20,7 +20,7 @@ inputs = {
         #   'risk_avers_factor':0.3,
         #   'equi_wght_vec':[0.1, 0.3, 0.2, 0.15, 0.25],
         #   'tau':0.05,
-          # 'low_constraints':[0, 0, 0, 0, 0], 'high_constraints':[1, 1, 1, 1, 1],
+          'low_constraints':[-10, -10, -10, -10, -10], 'high_constraints':[20, 20, 20, 20, 20],
         #   'category_mat':[[1,1,0,0,0],
         #                   [0,0,1,1,0],
         #                   [0,0,0,0,1]],
