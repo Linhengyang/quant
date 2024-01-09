@@ -1,31 +1,34 @@
-# import pymysql
+import pymysql
 import sqlite3
 import json
 import pandas as pd
 import numpy as np 
 
-# remotedb = {
-#     'ip':'xx.xxx.xxx.xx',
-#     'port':0000,
-#     'user':'xxxxxx',
-#     'pwd':'xxxxx',
-#     'db':'xxxx'
-# }
-
-# localdb = {
-#     'path':''
-# }
 
 
 class DatabaseConnection:
+    '''
+    db_info: 
+
+    remotedb = {
+        'ip':'xx.xxx.xxx.xx',
+        'port':0000,
+        'user':'xxxxxx',
+        'pwd':'xxxxx',
+        'db':'xxxx'
+    }
+
+    localdb = {
+        'path':'Data/xx.db'
+    }
+    '''
     def __init__(self, dbinfo) -> None:
         self.db_dict = dbinfo
 
     def GetSQL(self, sql_query, tbl_type='pddf'):
         if 'ip' in self.db_dict:
-            # conn = pymysql.connect(host=self.db_dict['ip'], port=self.db_dict['port'], user=self.db_dict['user'],
-            #                        password=self.db_dict['pwd'], database=self.db_dict['db'])
-            pass
+            conn = pymysql.connect(host=self.db_dict['ip'], port=self.db_dict['port'], user=self.db_dict['user'],
+                                   password=self.db_dict['pwd'], database=self.db_dict['db'])
         else:
             conn = sqlite3.connect(self.db_dict['path'])
         cursor = conn.cursor()
