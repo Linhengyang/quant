@@ -67,10 +67,9 @@ def BT_mvopt_var_from_r():
     else:
         high_constraints = None
     
-    portf_w_list, res_list = [], []
     begindate, termidate, gapday, back_window_size, num_assets = inputs['begindate'], inputs['termidate'], \
         int(inputs['gapday']), inputs['back_window_size'], len(inputs['assets_idx'])
-    portf_w_list, res_list = [[1,]*num_assets, ], []
+    portf_w_list, res_list = [[1/num_assets,]*num_assets, ], []
     # rtn_data shape: (num_assets, num_trade_days)
     rtn_data, _ = db_rtn_data(assets=inputs['assets_idx'], startdate=begindate, enddate=termidate, rtn_dilate=inputs['rtn_dilate'])
     # creating return rate matrices for assets from begin_date to termi_date on every gap_days
@@ -90,29 +89,32 @@ def BT_mvopt_var_from_r():
                                      rtn_data_loader=db_rtn_data, assets=inputs['assets_idx'],
                                      startdate=startdate.strftime("%Y%m%d"), enddate=enddate.strftime("%Y%m%d"),
                                      rtn_dilate=inputs['rtn_dilate'])
-        # 修正
-        # {'portf_w':list(solution['portf_w']), 'portf_var':solution['portf_var'], 'portf_r':solution['portf_r'],
-        # "qp_status":solution['qp_status'], 'assets_inds':mvopt.assets_inds}
-        res['portf_std'] = np.sqrt(res['portf_var'])
-        res['portf_var'] = res['portf_var'] / np.power( ( int(inputs['rtn_dilate']) ), 2)
-        res['portf_std'] = res['portf_std'] / int(inputs['rtn_dilate'])
-        res['portf_r'] = res['portf_r'] / int(inputs['rtn_dilate'])
+        # 求解失败: {"err_msg":str(e), 'status':'fail'}
+        # 无约束求解: {'portf_w':list, 'portf_var':float, 'portf_r':float, 'assets_inds':list}
+        # 带约束求解:  {'portf_w':list, 'portf_var':float, 'portf_r':float,"qp_status":'optimal'/'unknown','assets_inds':list}
+        if 'portf_w' in res:
+            # dilate修正
+            res['portf_std'] = np.sqrt(res['portf_var'])
+            res['portf_var'] = res['portf_var'] / np.power( ( int(inputs['rtn_dilate']) ), 2)
+            res['portf_std'] = res['portf_std'] / int(inputs['rtn_dilate'])
+            res['portf_r'] = res['portf_r'] / int(inputs['rtn_dilate'])
         res_list.append(res)
-        if ('portf_w' in res):
-            if 'qp_status' not in res:
-            # 当求解成功，且 非二次求解 或 二次求解最优时，记录求解结果
+        if ('portf_w' in res): # 当有解
+            if 'qp_status' not in res: # 若非二次规划
                 portf_w_list.append(res['portf_w'])
-            elif res['qp_status'] == 'optimal':
+            elif res['qp_status'] == 'optimal': # 若二次规划最优
                 portf_w_list.append(res['portf_w'])
+            else:
+                portf_w_list.append(portf_w_list[-1])
         else:
             # 否则，延用上一期的配置
             portf_w_list.append(portf_w_list[-1])
     BT_res = rtn_multi_periods(portf_w_list[1:], period_rtn_mat_list)
-    # {'rtn': return rate, 'trade_days': trade_days,'total_cost': total_cost, 'gross_rtn': gross_rtn}
+    # {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
     # 修正
     BT_res['rtn'] = BT_res['rtn']/int(inputs['rtn_dilate'])
     BT_res['gross_rtn'] = BT_res['gross_rtn']/int(inputs['rtn_dilate'])
-    return {'allocate':res_list, 'backtest':BT_res}
+    return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:]}
 
 
 
