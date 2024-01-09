@@ -11,7 +11,7 @@ import numpy as np
 
 inputs = {
         #   'num_assets':5, 'back_window_size':180,
-          'expt_rtn_rate':0.11,
+          'expt_rtn_rate':0.3,
         #   'expt_var':5.5,
         #   'view_pick_mat':[[1, -1, 0, 0, 0],
         #                    [0, 0, 1, -0.5, -0.5],
@@ -20,7 +20,7 @@ inputs = {
         #   'risk_avers_factor':0.3,
         #   'equi_wght_vec':[0.1, 0.3, 0.2, 0.15, 0.25],
         #   'tau':0.05,
-          'low_constraints':[0, 0, 0, 0, 0], 'high_constraints':[1, 1, 1, 1, 1],
+          # 'low_constraints':[0, 0, 0, 0, 0], 'high_constraints':[1, 1, 1, 1, 1],
         #   'category_mat':[[1,1,0,0,0],
         #                   [0,0,1,1,0],
         #                   [0,0,0,0,1]],
@@ -29,9 +29,9 @@ inputs = {
           # 'startdate':'20230101',
           # 'enddate':'20230401',
           'rtn_dilate':100,
-          'begindate':'20230101',
-          'termidate':'20230401',
-          'gapday':10,
+          'begindate':'20230301',
+          'termidate':'20230309',
+          'gapday':2,
           'back_window_size':30
           }
 r = requests.post("http://127.0.0.1:8000/BT_mvopt_var_from_r", json=inputs) # post data
