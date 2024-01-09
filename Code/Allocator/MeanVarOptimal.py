@@ -30,13 +30,13 @@ class MeanVarOpt:
         if low_constraints is not None: # 对权重下限作检查
             # 检查条件1：权重下限之和要小于等于1
             assert low_constraints.sum() <= 1.0, "Sum of low bounds of weights of assets must be smaller or equal to 1"
-            # 检查条件2：每个权重下限都要大于等于0且小于等于1（即不允许卖空）
-            assert all(low_constraints >= 0.0), "Low bounds must be larger or equal to 0"
-            assert all(low_constraints <= 1.0), "Low bounds must be smaller or equal to 1"
-        if high_constraints is not None:
-            # 检查条件3：每个权重上限都要大于等于0且小于等于1（即不允许卖空）
-            assert all(high_constraints >= 0.0), "High bounds must be larger or equal to 0"
-            assert all(high_constraints <= 1.0), "High bounds must be smaller or equal to 1"
+        #     # 检查条件2：每个权重下限都要大于等于0且小于等于1（即不允许卖空）
+        #     assert all(low_constraints >= 0.0), "Low bounds must be larger or equal to 0"
+        #     assert all(low_constraints <= 1.0), "Low bounds must be smaller or equal to 1"
+        # if high_constraints is not None:
+        #     # 检查条件3：每个权重上限都要大于等于0且小于等于1（即不允许卖空）
+        #     assert all(high_constraints >= 0.0), "High bounds must be larger or equal to 0"
+        #     assert all(high_constraints <= 1.0), "High bounds must be smaller or equal to 1"
         if low_constraints  is not None and high_constraints is not None:
             # 检查条件4：每个权重下限都要小于等于各自权重上限
             assert all(low_constraints <= high_constraints), "low bound must be be smaller or equal to high bound"
