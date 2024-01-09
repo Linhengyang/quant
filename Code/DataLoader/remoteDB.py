@@ -33,6 +33,10 @@ def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate):
                assets_tuple=tuple(assets), dilate=int(rtn_dilate))
     
     raw_data = db.GetSQL(sql_query, tbl_type='pddf')
+    if raw_data.shape[0] <= 1:
+        raise LookupError('Data 0 Extraction for table aidx_eod_prices from {start} to {end} among {assets_tuple}'.format(
+            start=int(startdate), end=int(enddate), assets_tuple=tuple(assets)
+        ))
     data = raw_data.pivot_table(index='S_IRDCODE', columns=['TRADE_DT'], values=['PCHG'])
     rtn_data = data.to_numpy(dtype=np.float32)
     assets_inds = data.index.to_list()
@@ -54,6 +58,10 @@ def db_date_data(assets:list, startdate:str, enddate:str):
     '''.format(startdate=int(startdate), enddate=int(enddate), assets_tuple=tuple(assets))
     
     raw_data = db.GetSQL(sql_query, tbl_type='pddf')['TRADE_DT'].astype(str)
+    if raw_data.shape[0] <= 1:
+        raise LookupError('Data 0 Extraction for table aidx_eod_prices from {start} to {end} among {assets_tuple}'.format(
+            start=int(startdate), end=int(enddate), assets_tuple=tuple(assets)
+        ))
     # data = raw_data.pivot_table(index='S_IRDCODE', columns=['TRADE_DT'], values=['PCHG'])
     # rtn_data = data.to_numpy(dtype=np.float32)
     # assets_inds = data.index.to_list()
