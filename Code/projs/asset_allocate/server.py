@@ -49,7 +49,7 @@ def application_mvopt_var_from_r():
     return res
 
 
-@asset_allocate_app.route('/BT_mvopt_var_from_r', methods=['POST'])
+@asset_allocate_app.route('/asset_allocate/BT_mvopt_var_from_r', methods=['POST'])
 def BT_mvopt_var_from_r():
     print('[{}]'.format(datetime.now()))
     inputs = request.json

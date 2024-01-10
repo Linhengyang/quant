@@ -34,5 +34,5 @@ inputs = {
           'gapday':2,
           'back_window_size':30
           }
-r = requests.post("http://127.0.0.1:8000/BT_mvopt_var_from_r", json=inputs) # post data
+r = requests.post("http://127.0.0.1:8000/asset_allocate/BT_mvopt_var_from_r", json=inputs) # post data
 print(r.text)
