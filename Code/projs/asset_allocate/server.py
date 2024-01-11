@@ -79,7 +79,9 @@ def BT_mvopt_var_from_r():
         period_rtn_mat_list.append( rtn_data.T[rsd_slices].T )
     # all market-open dates
     all_mkt_dates = db_date_data(inputs['assets_idx'], begindate, termidate).to_numpy()
-    strided_inds = strided_indexing_w_residual(len(all_mkt_dates), gapday, gapday)
+    strided_inds, rsd_ind = strided_indexing_w_residual(len(all_mkt_dates), gapday, gapday)
+    if rsd_ind is not None:
+        strided_inds.append(rsd_ind)
 
     for trade_dt in all_mkt_dates[strided_inds]:
         # trade_dt是begindate开始，到termidate为止或之前，每gapday的日期。即交易日期。
