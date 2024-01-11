@@ -14,22 +14,25 @@ def strided_slice_1darr(arr, window_size, stride):  # Window len = window_size, 
 
 
 # given length = 10, window_size = 3, stride = 3
-# return [0,1,2], [3,4,5], [6,7,8], [9,]
+# return strided_slices = [ [0,1,2], [3,4,5], [6,7,8] ], rsd_slices = [9,]
+# given length = 10, window_size = 2, stride = 2
+# return strided_slices = [ [0,1], [2, 3], [4,5], [6,7], [8, 9] ], rsd_slices = None
 def strided_slicing_w_residual(length, window_size, stride):
     strided_slices = strided_slice_1darr(np.arange(length), window_size, stride)
-    rsd_slices = range( stride * ((length - window_size) // stride + 1), length ) \
+    rsd_slice = range( stride * ((length - window_size) // stride + 1), length ) \
         if stride * ((length - window_size) // stride + 1) < length else None
-    return strided_slices, rsd_slices
+    return strided_slices, rsd_slice
 
 
 # given length = 10, windows_size =3, stride = 3
-# return [0, 3, 6, 9]
+# return strided_indices = [0, 3, 6], rsd_indx = 9
+# given length = 10, window_size = 2, stride = 2
+# return strided_indices = [ 0, 2, 4, 6, 8 ], rsd_indx = None
 def strided_indexing_w_residual(length, window_size, stride):
-    indices = list( range(0, length-window_size, stride) )
-    next_indx = indices[-1] + stride
-    if next_indx < length:
-        indices.append( next_indx )
-    return indices
+    strided_indices = list( range(0, length-window_size, stride) )
+    next_indx = strided_indices[-1] + stride
+    rsd_indx = next_indx if next_indx < length else None
+    return strided_indices, rsd_indx
 
 
 
