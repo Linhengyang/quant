@@ -43,7 +43,7 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
         assert len(dtypes) == len(headers), 'headers and datatypes must match in length'
     # 确认header
     elif headers:
-        with open(csv_path, encoding='gbk') as csv_f:
+        with open(csv_path, encoding='utf-8') as csv_f:
             data = csv.reader(csv_f)
             for colnames in data:
                 break
@@ -55,7 +55,7 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
     ','.join([header + ' ' + dtype + '\n' for header, dtype in zip(headers, dtypes)]) + 
     ''')
     ''')
-    with open(csv_path, encoding='gbk') as csv_f:
+    with open(csv_path, encoding='utf-8') as csv_f:
         if headers: # 当第一行为列名时，跳过第一行
             next(csv_f)
         row_numb = 0 # 行计数器
@@ -66,7 +66,7 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
     con.commit()
     con.close()
     print('{row_numb} rows of table {tbl_name} in {db_path} written successfully from {csv_path}'\
-          .format(row_numb = row_numb, tbl_name=tbl_name, db_path=db_path, csv_path=csv_path))
+          .format(row_numb=row_numb, tbl_name=tbl_name, db_path=db_path, csv_path=csv_path))
     
 
 
@@ -76,8 +76,8 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
 
 
 if __name__ == '__main__':
-    csv_path = 'aidx.csv'
-    db_path = 'aidx.db'
-    tbl_name = 'aidx_eod_prices'
-    dtypes = ['INT', 'TEXT', 'TEXT', 'INT', 'TEXT', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL']
+    csv_path = 'atradedt.csv'
+    db_path = 'atradedt.db'
+    tbl_name = 'a_trade_dt'
+    dtypes = ['INT', 'INT']
     csv2sqliteDB(csv_path, db_path, tbl_name, dtypes=dtypes, headers=True)
