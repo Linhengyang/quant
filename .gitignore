@@ -1,9 +1,6 @@
 **/.DS_Store
 **/.env
-**/.db
-**/.zip
-**/.csv
-Data/aidx.db
-Data/AIDX.csv
-Data/atradedt.db
-Data/atradedt.csv
+**/**.db
+**/**.zip
+**/**.csv
+**/**.pyc
