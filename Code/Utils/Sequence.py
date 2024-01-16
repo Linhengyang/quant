@@ -4,7 +4,7 @@ import numpy as np
 # nrows=max step number through 1-D array with stride S
 # e.g
 # [1,2,3,4,5,6,7,8,9,10] --> window size 3, stride 2 ---> [1,2,3], [3,4,5], [5,6,7], [7,8,9]
-# residuals ----> [10]
+# residuals ----> [9, 10]
 
 def strided_slice_1darr(arr, window_size, stride):  # Window len = window_size, Stride len/stepsize = stride
     assert len(arr) >= window_size, '1-D array length must be larger or equal to window_size'
@@ -45,4 +45,4 @@ def strided_indexing_w_residual(length, window_size, stride):
 
 
 if __name__ == "__main__":
-    print( strided_indexing_w_residual(10, 2, 5) )
+    print( strided_slicing_w_residual(16, 5, 5) )
