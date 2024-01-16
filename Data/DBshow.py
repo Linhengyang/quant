@@ -1,7 +1,7 @@
 import sqlite3
 
 localdb = {
-    "path":"aidx.db"
+    "path":"tydb.db"
 }
 
 
@@ -23,9 +23,10 @@ def LocalDBshow(localdb, tbl_name):
     conn.close()
     for row in data:
         print(row)
-    # print("description:", col_des)
+    print("description:", col_des)
 
 
 
 if __name__ == "__main__":
-    LocalDBshow(localdb, "aidx_eod_prices")
+    # LocalDBshow(localdb, "aidx_eod_prices")
+    LocalDBshow(localdb, "dim_trade_date_ashare")
