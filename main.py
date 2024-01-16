@@ -1,4 +1,4 @@
-from Code.projs.asset_allocate.server import asset_allocate_app
+from Code.projs.asset_allocate.server_dev import asset_allocate_app
 import sys
 sys.dont_write_bytecode = True
 
