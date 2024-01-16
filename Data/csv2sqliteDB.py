@@ -3,18 +3,19 @@ import sqlite3
 import pandas as pd
 
 
-def csv2sqliteDB_pd(csv_path, db_path, tbl_name):
+def csv2sqliteDB_pd(csv_path, db_path, tbl_name, encoding='utf-8'):
 
     conn = sqlite3.connect(db_path)
     with conn:
         df = pd.read_csv(csv_path)
-        df['S_IRDNAME'] = df['S_IRDNAME'].astype(str).apply(lambda x: x.encode('gb2312'))
+        df['S_IRDNAME'] = df['S_IRDNAME'].astype(str).apply(lambda x: x.encode(encoding))
         df.to_sql(tbl_name, conn, if_exists='append', index=False)
     print('succeed')
 
 
-def printcsv(csv_path, print_numb=5, header=True):
-    with open(csv_path, encoding='gbk') as csv_f:
+# 打印csv文件的前几行
+def printcsv(csv_path, print_numb=5, header=True, encoding='utf-8'):
+    with open(csv_path, encoding=encoding) as csv_f:
         data = csv.reader(csv_f)
         r_numb = 0
         for row in data:
@@ -25,8 +26,8 @@ def printcsv(csv_path, print_numb=5, header=True):
                 break
 
 
-
-def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
+# csv文件输出到sqlite database文件
+def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True, encoding='utf-8'):
     '''
     csv_path: .csv文件地址
     db_path: sqlite database .db文件地址
@@ -43,7 +44,7 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
         assert len(dtypes) == len(headers), 'headers and datatypes must match in length'
     # 确认header
     elif headers:
-        with open(csv_path, encoding='utf-8') as csv_f:
+        with open(csv_path, encoding=encoding) as csv_f:
             data = csv.reader(csv_f)
             for colnames in data:
                 break
@@ -55,7 +56,7 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
     ','.join([header + ' ' + dtype + '\n' for header, dtype in zip(headers, dtypes)]) + 
     ''')
     ''')
-    with open(csv_path, encoding='utf-8') as csv_f:
+    with open(csv_path, encoding=encoding) as csv_f:
         if headers: # 当第一行为列名时，跳过第一行
             next(csv_f)
         row_numb = 0 # 行计数器
@@ -75,9 +76,12 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True):
 
 
 
+
 if __name__ == '__main__':
-    csv_path = 'atradedt.csv'
-    db_path = 'atradedt.db'
-    tbl_name = 'a_trade_dt'
-    dtypes = ['INT', 'INT']
-    csv2sqliteDB(csv_path, db_path, tbl_name, dtypes=dtypes, headers=True)
+    csv_path = 'aidx2023.csv'
+    db_path = 'tydb.db'
+    tbl_name = 'aidx_eod_prices'
+    # dtypes = ['INT', 'INT', 'INT', 'INT', 'TEXT', 'INT', 'TEXT', 'INT', 'TEXT', 'INT', 'INT', 'INT',]
+    dtypes = ['INT', 'TEXT', 'TEXT', 'INT', 'TEXT', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL']
+    # printcsv(csv_path, print_numb=5, header=True, encoding='utf-8-sig')
+    csv2sqliteDB(csv_path, db_path, tbl_name, dtypes=dtypes, headers=True, encoding='utf-8-sig')
