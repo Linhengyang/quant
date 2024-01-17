@@ -16,7 +16,7 @@ from Code.DataLoader.dbconnect import DatabaseConnection
 # }
 
 localdb = {
-    'path':'Data/tydb.db'
+    'path':'Data/asset_allocate/tydb.db'
 }
 
 def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate):
@@ -45,21 +45,22 @@ def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate):
 
 
 
-def db_date_data(startdate:str, enddate:str='20241213'):
+def db_date_data(startdate:str, enddate:str):
     # get trade dates for assets from startdate to enddate
     db = DatabaseConnection(localdb)
-    assert int(startdate) <= int(enddate), 'start date must no later than end date'
+    startdate, enddate = int(startdate), int(enddate)
+    assert startdate <= enddate, 'start date must no later than end date'
 
     sql_query = '''
         SELECT DISTINCT TRADE_DT
         FROM dim_trade_date_ashare
         WHERE DATE_FLAG = '1' AND TRADE_DT >= {startdate} AND TRADE_DT <= {enddate}
         ORDER BY TRADE_DT ASC
-    '''.format(startdate=int(startdate), enddate=int(enddate))
+    '''.format(startdate=startdate, enddate=enddate)
 
     raw_data = db.GetSQL(sql_query, tbl_type='pddf')['TRADE_DT'].astype(int).to_numpy()
     if len(raw_data) <= 1:
         raise LookupError('Data 0 Extraction for table dim_trade_date_ashare from {start} to {end}'.format(
-            start=int(startdate), end=int(enddate)
+            start=startdate, end=enddate
         ))
     return raw_data
