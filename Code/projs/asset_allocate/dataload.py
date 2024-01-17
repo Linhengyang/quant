@@ -16,7 +16,7 @@ from Code.DataLoader.dbconnect import DatabaseConnection
 # }
 
 localdb = {
-    'path':'Data/tydb.db'
+    'path':'Data/asset_allocate/tydb.db'
 }
 
 def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate):
