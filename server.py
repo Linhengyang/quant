@@ -25,3 +25,15 @@ from Code.projs.asset_allocate.risk_manage import risk_manage_api
 
 asset_allocate_app.register_blueprint(mvopt_api)
 asset_allocate_app.register_blueprint(risk_manage_api)
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    asset_allocate_app.run(port=8000, debug=True)
