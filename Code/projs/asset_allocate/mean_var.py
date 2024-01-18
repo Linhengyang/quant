@@ -133,7 +133,8 @@ def BT_mvopt_var_from_r():
     all_rtn_data, assets_inds = db_rtn_data(assets=inputs['assets_idx'], startdate=str(earlistdate),\
                                             enddate=termidate, rtn_dilate=inputs['rtn_dilate'])
     assert all_rtn_data.shape[1] == len(all_mkt_dates),\
-        'Trade dates with length {mkt_len} and Index market return data {tr_len} mismatch'.format(mkt_len=len(all_mkt_dates),tr_len=rtn_data.shape[1])
+        'market dates with length {mkt_len} and Index return dates {index_len} mismatch'.\
+            format(mkt_len=len(all_mkt_dates),index_len=all_rtn_data.shape[1])
     rtn_data = all_rtn_data[:, begindate_idx:] # 从 all_rtn_data 中，取出 begindate到termidate的列
     portf_w_list, res_list = [[1/num_assets,]*num_assets, ], []
     # 每一期持仓起始，往后持仓gapday天
@@ -240,7 +241,8 @@ def BT_mvopt_r_from_var():
     all_rtn_data, assets_inds = db_rtn_data(assets=inputs['assets_idx'], startdate=str(earlistdate),\
                                             enddate=termidate, rtn_dilate=inputs['rtn_dilate'])
     assert all_rtn_data.shape[1] == len(all_mkt_dates),\
-        'Trade dates with length {mkt_len} and Index market return data {tr_len} mismatch'.format(mkt_len=len(all_mkt_dates),tr_len=rtn_data.shape[1])
+        'market dates with length {mkt_len} and Index return dates {index_len} mismatch'.\
+            format(mkt_len=len(all_mkt_dates),index_len=all_rtn_data.shape[1])
     rtn_data = all_rtn_data[:, begindate_idx:] # 从 all_rtn_data 中，取出 begindate到termidate的列
     portf_w_list, res_list = [[1/num_assets,]*num_assets, ], []
     # 每一期持仓起始，往后持仓gapday天
