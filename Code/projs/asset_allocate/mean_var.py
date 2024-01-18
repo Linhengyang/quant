@@ -130,8 +130,7 @@ def BT_mvopt_var_from_r():
     earlistdate_idx = 0
     # all_rtn_data shape: (num_assets, begindate - back_window_size to begindate to termidate)
     # which is back_window_size + num_period_days_from_begin_to_termi
-    all_rtn_data, assets_inds = db_rtn_data(assets=inputs['assets_idx'], startdate=str(earlistdate),\
-                                            enddate=termidate, rtn_dilate=inputs['rtn_dilate'])
+    all_rtn_data, assets_inds = db_rtn_data(assets=assets_inds, startdate=str(earlistdate),enddate=termidate, rtn_dilate=dilate)
     assert all_rtn_data.shape[1] == len(all_mkt_dates),\
         'market dates with length {mkt_len} and Index return dates {index_len} mismatch'.\
             format(mkt_len=len(all_mkt_dates),index_len=all_rtn_data.shape[1])
@@ -238,8 +237,7 @@ def BT_mvopt_r_from_var():
     earlistdate_idx = 0
     # all_rtn_data shape: (num_assets, begindate - back_window_size to begindate to termidate)
     # which is back_window_size + num_period_days_from_begin_to_termi
-    all_rtn_data, assets_inds = db_rtn_data(assets=inputs['assets_idx'], startdate=str(earlistdate),\
-                                            enddate=termidate, rtn_dilate=inputs['rtn_dilate'])
+    all_rtn_data, assets_inds = db_rtn_data(assets=assets_inds, startdate=str(earlistdate),enddate=termidate, rtn_dilate=dilate)
     assert all_rtn_data.shape[1] == len(all_mkt_dates),\
         'market dates with length {mkt_len} and Index return dates {index_len} mismatch'.\
             format(mkt_len=len(all_mkt_dates),index_len=all_rtn_data.shape[1])
