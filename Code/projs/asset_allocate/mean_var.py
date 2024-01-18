@@ -100,9 +100,7 @@ def BT_mvopt_var_from_r():
     begindate, termidate, gapday, back_window_size, expt_r, dilate = inputs['begindate'], inputs['termidate'],\
         int(inputs['gapday']), int(inputs['back_window_size']), np.float32(inputs['expt_rtn_rate']), int(inputs['rtn_dilate'])
     print('Back Test for mean-variance-optimal strategy from {begindate} to {termidate} trading in every {gapday} upon \
-          assets {assets}'.format(
-        begindate=begindate, termidate=termidate, gapday=inputs['gapday'], assets=assets_inds
-    ))
+          assets {assets}'.format(begindate=begindate, termidate=termidate, gapday=gapday, assets=assets_inds))
     # 下限/上限
     if low_constraints == [None] * num_assets: # 假如 low_constraints 全部是 None即完全空输入
         low_constraints = None
@@ -171,13 +169,13 @@ def BT_mvopt_var_from_r():
             portf_w_list.append(portf_w_list[-1])
     # 回测
     BT_res = rtn_multi_periods(portf_w_list[1:], hold_rtn_mat_list)
-    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
+    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
     # 回测结果dilate修正
     BT_res['rtn'] = BT_res['rtn']/dilate
     BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
     delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
     BT_res['annual_rtn'] = np.power( 1 + BT_res['rtn'], 1/delta_year) - 1
-    return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:]}
+    return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_inds}
 
 
 
@@ -207,9 +205,7 @@ def BT_mvopt_r_from_var():
     begindate, termidate, gapday, back_window_size, expt_var, dilate = inputs['begindate'], inputs['termidate'],\
         int(inputs['gapday']), int(inputs['back_window_size']), np.float32(inputs['expt_var']), int(inputs['rtn_dilate'])
     print('Back Test for mean-variance-optimal strategy from {begindate} to {termidate} trading in every {gapday} upon \
-          assets {assets}'.format(
-        begindate=begindate, termidate=termidate, gapday=inputs['gapday'], assets=assets_inds
-    ))
+          assets {assets}'.format(begindate=begindate, termidate=termidate, gapday=gapday, assets=assets_inds))
     # 下限/上限
     if low_constraints == [None] * num_assets: # 假如 low_constraints 全部是 None即完全空输入
         low_constraints = None
@@ -278,10 +274,10 @@ def BT_mvopt_r_from_var():
             portf_w_list.append(portf_w_list[-1])
     # 回测
     BT_res = rtn_multi_periods(portf_w_list[1:], hold_rtn_mat_list)
-    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
+    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
     # 回测结果dilate修正
     BT_res['rtn'] = BT_res['rtn']/dilate
     BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
     delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
     BT_res['annual_rtn'] = np.power( 1 + BT_res['rtn'], 1/delta_year) - 1
-    return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:]}
+    return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_inds}
