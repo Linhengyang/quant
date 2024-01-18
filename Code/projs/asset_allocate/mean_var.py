@@ -171,8 +171,8 @@ def BT_mvopt_var_from_r():
             portf_w_list.append(portf_w_list[-1])
     # 回测
     BT_res = rtn_multi_periods(portf_w_list[1:], hold_rtn_mat_list)
-    # {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
-    # 修正
+    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
+    # 回测结果dilate修正
     BT_res['rtn'] = BT_res['rtn']/dilate
     BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
     delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
@@ -278,8 +278,8 @@ def BT_mvopt_r_from_var():
             portf_w_list.append(portf_w_list[-1])
     # 回测
     BT_res = rtn_multi_periods(portf_w_list[1:], hold_rtn_mat_list)
-    # {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
-    # 修正
+    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
+    # 回测结果dilate修正
     BT_res['rtn'] = BT_res['rtn']/dilate
     BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
     delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
