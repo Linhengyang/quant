@@ -85,7 +85,7 @@ def BT_mvopt_var_from_r():
     for asset in assets_info:
         assets_inds.append(asset['id'])
         assets_categs.append(asset['category'])
-        if asset['lower_bound']:
+        if "lower_bound" in asset:
             low_constraints.append(asset['lower_bound'])
         else:
             low_constraints.append(None)
