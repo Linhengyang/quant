@@ -23,37 +23,6 @@ template_folder = 'Template'
 # asset_allocate_app = Flask(app_name, static_folder=static_folder, template_folder=template_folder)
 risk_manage_api = Blueprint('risk_manage', __name__)
 
-# # risk parity
-# def get_riskparity(category_mat, rtn_data, assets_inds):
-#     if category_mat is not None:
-#         category_mat = np.array(category_mat)
-#     try:
-#         fin = RiskParity(rtn_data, category_mat, assets_inds=assets_inds)
-#         portf_w = fin.optimal_solver()
-#         res = {'portf_w':list(portf_w), 'portf_var':fin.risk_contribs.sum(), 'portf_r':fin.portf_return,\
-#                'risk_contribs':list(fin.risk_contribs), 'assets_inds':fin.assets_inds}
-#     except Exception as e:
-#         traceback.print_exc()
-#         res = {"err_msg":str(e), 'status':'fail'}
-#     return res
-
-
-
-# # risk budget
-# def get_riskbudget(category_mat, tgt_contrib_ratio, rtn_data, assets_inds):
-#     if category_mat is not None:
-#         category_mat = np.array(category_mat)
-#     try:
-#         tgt_contrib_ratio = np.array(tgt_contrib_ratio)
-#         fin = RiskParity(rtn_data, category_mat, tgt_contrib_ratio, assets_inds=assets_inds)
-#         portf_w = fin.optimal_solver()
-#         res = {'portf_w':list(portf_w), 'portf_var':fin.risk_contribs.sum(), 'portf_r':fin.portf_return,\
-#                'risk_contribs':list(fin.risk_contribs),'assets_inds':fin.assets_inds}
-#     except Exception as e:
-#         traceback.print_exc()
-#         res = {"err_msg":str(e), 'status':'fail'}
-#     return res
-
 # risk manage
 # tgt_contrib_ratio = None，为风险平价; 不为None时，为风险预算
 def get_risk_manage(category_mat, tgt_contrib_ratio, rtn_data, assets_inds):
