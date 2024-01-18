@@ -84,7 +84,10 @@ def BT_mvopt_var_from_r():
     assets_inds, low_constraints, high_constraints, assets_categs = [], [], [], []
     for asset in assets_info:
         assets_inds.append(asset['id'])
-        assets_categs.append(asset['category'])
+        if 'category' in asset:
+            assets_categs.append(asset['category'])
+        else:
+            assets_categs.append(None)
         if "lower_bound" in asset:
             low_constraints.append(asset['lower_bound'])
         else:
@@ -188,12 +191,15 @@ def BT_mvopt_r_from_var():
     assets_inds, low_constraints, high_constraints, assets_categs = [], [], [], []
     for asset in assets_info:
         assets_inds.append(asset['id'])
-        assets_categs.append(asset['category'])
-        if asset['lower_bound']:
+        if 'category' in asset:
+            assets_categs.append(asset['category'])
+        else:
+            assets_categs.append(None)
+        if 'lower_bound' in asset:
             low_constraints.append(asset['lower_bound'])
         else:
             low_constraints.append(None)
-        if asset['upper_bound']:
+        if 'upper_bound' in asset:
             high_constraints.append(asset['upper_bound'])
         else:
             high_constraints.append(None)
