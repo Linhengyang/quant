@@ -10,7 +10,6 @@ import traceback
 import sys
 sys.dont_write_bytecode = True
 
-from Code.projs.asset_allocate.functions import *
 from Code.projs.asset_allocate.dataload import db_rtn_data, db_date_data
 from Code.Utils.Sequence import strided_slicing_w_residual
 from Code.BackTester.BT_AssetAllocate import rtn_multi_periods
