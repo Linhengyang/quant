@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Callable
+from datetime import datetime
 
 def rtn_period(portf_w:np.array, period_rtn_mat:np.array):
     assert len(portf_w) == len(period_rtn_mat),\
@@ -92,7 +93,15 @@ def rtn_multi_periods(portf_w_list:list, period_rtn_mat_list:list, trade_cost_li
 
 
 
-
+def modify_BackTestResult(BT_res, dilate, begindate:str, termidate:str):
+    # input BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
+    # rtn 膨胀系数修正 和 年化利率计算
+    BT_res['rtn'] = BT_res['rtn']/dilate
+    BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
+    delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
+    BT_res['annual_rtn'] = np.power( 1 + BT_res['rtn'], 1/delta_year) - 1
+    # output BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
+    return BT_res
 
 
 
