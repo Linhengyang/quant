@@ -31,6 +31,7 @@ inputs = {
           "termidate":"20230309",
           "gapday":2,
           "back_window_size":30,
+          "benchmark":"CSI800",
           "assets_info":[
               {
                 "id":"000001.SH",
