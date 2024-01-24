@@ -107,11 +107,12 @@ def get_train_rtn_data(begindate, termidate, gapday, back_window_size, dilate, a
     strided_slices, _ = strided_slicing_w_residual(all_rtn_data.shape[1]-1, back_window_size, gapday)
     train_rtn_mat_list = list(all_rtn_data.T[strided_slices].transpose(0,2,1))
     assert len(train_rtn_mat_list) == len(hold_rtn_mat_list), 'train & hold period mismatch error. Please check code'
-    return train_rtn_mat_list, hold_rtn_mat_list
+    return train_rtn_mat_list, hold_rtn_mat_list, assets_inds
 
 
 
 def modify_BackTestResult(BT_res, dilate, begindate:str, termidate:str):
+    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
     # rtn 膨胀系数修正 和 年化利率计算
     BT_res['rtn'] = BT_res['rtn']/dilate
     BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
@@ -198,7 +199,8 @@ def mvopt():
     else: # 将个别空输入设为上限 1000 
         high_constraints = [upper_bound if upper_bound is not None else 1000 for upper_bound in high_constraints]
     # 获取训练和持仓数据
-    train_rtn_mat_list, hold_rtn_mat_list = get_train_rtn_data(begindate, termidate, gapday, back_window_size, dilate, assets_inds)
+    train_rtn_mat_list, hold_rtn_mat_list, assets_inds = get_train_rtn_data(begindate, termidate,\
+                                                                            gapday, back_window_size, dilate, assets_inds)
     # 根据目标求解
     mvo_target = inputs['mvo_target']
     expt_tgt_value = inputs['expt_tgt_value'] # expt_tgt_value 可以是预期收益率也可以是预期方差
