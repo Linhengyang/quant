@@ -70,6 +70,6 @@ inputs = {
               },
           ]
           }
-# r = requests.post("http://127.0.0.1:8000/asset_allocate/BT_mvopt_var_from_r", json=inputs) # post data
-r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
+r = requests.post("http://127.0.0.1:8000/asset_allocate/mean_var_opt", json=inputs) # post data
+# r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
 print(r.text)
