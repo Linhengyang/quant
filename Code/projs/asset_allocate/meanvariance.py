@@ -14,7 +14,8 @@ from typing import Callable
 from Code.Allocator.MeanVarOptimal import MeanVarOpt
 from Code.projs.asset_allocate.dataload import db_rtn_data, db_date_data
 from Code.Utils.Sequence import strided_slicing_w_residual
-from Code.BackTester.BT_AssetAllocate import rtn_multi_periods
+from Code.BackTester.BT_AssetAllocate import rtn_multi_periods, modify_BackTestResult
+from Code.projs.asset_allocate.benchmark import get_benchmark_rtn_data, BackTest_benchmark, parse_benchmark
 
 warnings.filterwarnings('ignore')
 app_name = __name__
@@ -48,7 +49,7 @@ def mvopt_portf_var_from_r(r:np.float32, low_constraints, high_constraints, rtn_
             # {"portf_w":np_array, "portf_var":float,
             #  "portf_r":float,    "qp_status":string}
             solution = mvopt.solve_constrained_qp_from_r(r)
-            res = {'portf_w':list(solution['portf_w']), 'portf_var':solution['portf_var'], 'portf_r':solution['portf_r'],
+            res = {'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_r':solution['portf_r'],
                    "qp_status":solution['qp_status'], 'assets_inds':mvopt.assets_inds}
     except Exception as e:
         traceback.print_exc()
@@ -68,7 +69,7 @@ def mvopt_portf_r_from_var(var:np.float32, low_constraints, high_constraints, rt
             # {"portf_w":np_array, "portf_var":float,
             #  "portf_r":float,    "qp_status":string}
             solution = mvopt.solve_constrained_qp_from_var(var)
-            res = {'portf_w':list(solution['portf_w']), 'portf_var':solution['portf_var'], 'portf_r':solution['portf_r'],
+            res = {'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_r':solution['portf_r'],
                    "qp_status":solution['qp_status'], 'assets_inds':mvopt.assets_inds}
     except Exception as e:
         traceback.print_exc()
@@ -111,28 +112,17 @@ def get_train_rtn_data(begindate, termidate, gapday, back_window_size, dilate, a
 
 
 
-def modify_BackTestResult(BT_res, dilate, begindate:str, termidate:str):
-    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
-    # rtn 膨胀系数修正 和 年化利率计算
-    BT_res['rtn'] = BT_res['rtn']/dilate
-    BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
-    delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
-    BT_res['annual_rtn'] = np.power( 1 + BT_res['rtn'], 1/delta_year) - 1
-    return BT_res
-
-
-
 def BackTest_mvopt(expt_tgt_value, solver_func:Callable, dilate, begindate, termidate,  
                    train_rtn_mat_list, hold_rtn_mat_list, assets_inds, low_constraints, high_constraints):
     num_assets = len(assets_inds)
-    portf_w_list, res_list = [[1/num_assets,]*num_assets, ], []
+    portf_w_list, res_list = [ np.array([1/num_assets,]*num_assets), ], [] # 初始化为平均分配
     for train_rtn_mat in train_rtn_mat_list:
         # train_rtn_mat shape: (num_assets, back_window_size)
         # solver_func pair with expt_tgt_value: mvopt_portf_var_from_r with expt_r, mvopt_portf_r_from_var with expt_var
         res = solver_func(expt_tgt_value, low_constraints, high_constraints, train_rtn_mat, assets_inds)
         # 求解失败: {"err_msg":str(e), 'status':'fail'}
-        # 无约束求解: {'portf_w':list, 'portf_var':float, 'portf_r':float, 'assets_inds':list}
-        # 带约束求解:  {'portf_w':list, 'portf_var':float, 'portf_r':float,"qp_status":'optimal'/'unknown','assets_inds':list}
+        # 无约束求解: {'portf_w':np_array, 'portf_var':float, 'portf_r':float, 'assets_inds':list}
+        # 带约束求解:  {'portf_w':np_array, 'portf_var':float, 'portf_r':float,"qp_status":'optimal'/'unknown','assets_inds':list}
         if 'portf_w' in res:
             # dilate修正
             res['portf_std'] = np.sqrt(res['portf_var'])
@@ -157,6 +147,8 @@ def BackTest_mvopt(expt_tgt_value, solver_func:Callable, dilate, begindate, term
     # 回测结果dilate修正
     BT_res = modify_BackTestResult(BT_res, dilate, begindate, termidate)
     return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_inds}
+
+
 
 
 
@@ -212,6 +204,25 @@ def mvopt():
         raise NotImplementedError('sharp ratio maximized not implemented yet')
     else:
         raise ValueError("wrong target code. must be one of minWave, maxReturn, sharp")
+    # mvopt_res = {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_inds}
+    mvopt_res = BackTest_mvopt(expt_tgt_value, solver_func, dilate, begindate, termidate,
+                               train_rtn_mat_list, hold_rtn_mat_list, assets_inds, low_constraints, high_constraints)
     
-    return BackTest_mvopt(expt_tgt_value, solver_func, dilate, begindate, termidate, 
-                          train_rtn_mat_list, hold_rtn_mat_list, assets_inds, low_constraints, high_constraints)
+    # benchmark求解
+    bm_asset_inds, bm_weights, bm_rebal_gapday = parse_benchmark(inputs['benchmark'])
+    bm_hold_rtn_mat_list, bm_asset_inds = get_benchmark_rtn_data(begindate, termidate, bm_asset_inds, dilate, bm_rebal_gapday)
+    bm_bt_res = BackTest_benchmark(begindate, termidate, bm_hold_rtn_mat_list, dilate, bm_asset_inds, bm_weights)
+    # bm_bt_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
+
+    mvopt_res['benchmark'] = bm_bt_res
+    mvopt_res['excess'] = {'rtn':mvopt_res['backtest']['rtn'] - bm_bt_res['rtn'],
+                           'annual_rtn':mvopt_res['backtest']['annual_rtn'] - bm_bt_res['annual_rtn']}
+    
+    # output mvopt_res =
+    # {
+    # 'details':res_list, 'weights':portf_w_list, 'assets_id':assets_inds,
+    # 'backtest':{'rtn':, 'trade_days':, 'total_cost':, 'gross_rtn':, 'annual_rtn':},
+    # 'benchmark':{'rtn':, 'trade_days':, 'total_cost':, 'gross_rtn':, 'annual_rtn':},
+    # 'excess':{'rtn':, 'annual_rtn':}
+    # }
+    return mvopt_res
