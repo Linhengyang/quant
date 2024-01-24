@@ -98,13 +98,13 @@ def get_train_rtn_data(begindate, termidate, gapday, back_window_size, dilate, a
         'market dates with length {mkt_len} and Index return dates {index_len} mismatch'.\
             format(mkt_len=len(all_mkt_dates),index_len=all_rtn_data.shape[1])
     rtn_data = all_rtn_data[:, begindate_idx:] # 从 all_rtn_data 中，取出 begindate到termidate的列
-    # 每一期持仓起始，往后持仓gapday天
-    strided_slices, rsd_slices = strided_slicing_w_residual(rtn_data.shape[1], gapday, gapday)
+    # 每一期持仓起始，往后持仓gapday天或最后一天
+    strided_slices, _, last_range = strided_slicing_w_residual(rtn_data.shape[1], gapday, gapday)
     hold_rtn_mat_list = list(rtn_data.T[strided_slices].transpose(0,2,1))
-    if rsd_slices is not None:
-        hold_rtn_mat_list.append( rtn_data.T[rsd_slices].T )
+    if list(last_range): # rsd_range不为空
+        hold_rtn_mat_list.append( rtn_data.T[last_range].T )
     # 每一期调仓日期起始，往前回溯back_window_size天。调仓日期在持仓日之前
-    strided_slices, _ = strided_slicing_w_residual(all_rtn_data.shape[1]-1, back_window_size, gapday)
+    strided_slices, _, _ = strided_slicing_w_residual(all_rtn_data.shape[1]-1, back_window_size, gapday)
     train_rtn_mat_list = list(all_rtn_data.T[strided_slices].transpose(0,2,1))
     assert len(train_rtn_mat_list) == len(hold_rtn_mat_list), 'train & hold period mismatch error. Please check code'
     return train_rtn_mat_list, hold_rtn_mat_list, assets_inds
