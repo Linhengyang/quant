@@ -25,58 +25,7 @@ template_folder = 'Template'
 # asset_allocate_app = Flask(app_name, static_folder=static_folder, template_folder=template_folder)
 mvopt_api = Blueprint('mean_var', __name__)
 
-# mean-variance optimal
-
-def get_mvopt(low_constraints, high_constraints, rtn_data, assets_inds):
-    cov_mat = np.cov(rtn_data)
-    rtn_rates = rtn_data.mean(axis=1)
-    if low_constraints is not None:
-        low_constraints = np.array(low_constraints)
-    if high_constraints is not None:
-        high_constraints = np.array(high_constraints)
-    finmodel = MeanVarOpt(rtn_rates, cov_mat, low_constraints, high_constraints, assets_inds)
-    return finmodel
-
-
-def mvopt_portf_var_from_r(r:np.float32, low_constraints, high_constraints, rtn_data, assets_inds):
-    try:
-        mvopt = get_mvopt(low_constraints, high_constraints, rtn_data, assets_inds)
-        if low_constraints is None and high_constraints is None:
-            var_star, weights_star = mvopt.get_portf_var_from_r(r)
-            res = {'portf_w':list(weights_star), 'portf_var':var_star, 'portf_r':r,
-                   'assets_inds':mvopt.assets_inds}
-        else:
-            # {"portf_w":np_array, "portf_var":float,
-            #  "portf_r":float,    "qp_status":string}
-            solution = mvopt.solve_constrained_qp_from_r(r)
-            res = {'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_r':solution['portf_r'],
-                   "qp_status":solution['qp_status'], 'assets_inds':mvopt.assets_inds}
-    except Exception as e:
-        traceback.print_exc()
-        res = {"err_msg":str(e), 'status':'fail'}
-    return res
-
-
-
-def mvopt_portf_r_from_var(var:np.float32, low_constraints, high_constraints, rtn_data, assets_inds):
-    try:
-        mvopt = get_mvopt(low_constraints, high_constraints, rtn_data, assets_inds)
-        if low_constraints is None and high_constraints is None:
-            r_star, weights_star = mvopt.get_portf_r_from_var(var)
-            res = {'portf_w':list(weights_star), 'portf_var':var, 'portf_r':r_star, 
-                   'assets_inds':mvopt.assets_inds}
-        else:
-            # {"portf_w":np_array, "portf_var":float,
-            #  "portf_r":float,    "qp_status":string}
-            solution = mvopt.solve_constrained_qp_from_var(var)
-            res = {'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_r':solution['portf_r'],
-                   "qp_status":solution['qp_status'], 'assets_inds':mvopt.assets_inds}
-    except Exception as e:
-        traceback.print_exc()
-        res = {"err_msg":str(e), 'status':'fail'}
-    return res
-
-
+# get data for train and backtest
 def get_train_rtn_data(begindate, termidate, gapday, back_window_size, dilate, assets_inds):
     # 取数据，一次io解决
     # 取出2000-01-01至终止日, 所有的交易日期，已排序
@@ -112,6 +61,83 @@ def get_train_rtn_data(begindate, termidate, gapday, back_window_size, dilate, a
 
 
 
+# mean-variance optimal
+
+def get_mvopt(low_constraints, high_constraints, rtn_data, assets_inds):
+    cov_mat = np.cov(rtn_data)
+    rtn_rates = rtn_data.mean(axis=1)
+    if low_constraints is not None:
+        low_constraints = np.array(low_constraints)
+    if high_constraints is not None:
+        high_constraints = np.array(high_constraints)
+    finmodel = MeanVarOpt(rtn_rates, cov_mat, low_constraints, high_constraints, assets_inds)
+    return finmodel
+
+
+def mvopt_portf_var_from_r(r:np.float32, low_constraints, high_constraints, rtn_data, assets_inds):
+    try:
+        mvopt = get_mvopt(low_constraints, high_constraints, rtn_data, assets_inds)
+        if low_constraints is None and high_constraints is None:
+            var_star, weights_star = mvopt.get_portf_var_from_r(r) # return float, np.array
+            res = {'err_msg':'', 'status':'success', 'solve_status':"direct",
+                   'portf_w':weights_star, 'portf_var':var_star, 'portf_rtn':r,
+                   'assets_inds':mvopt.assets_inds}
+        else:
+            solution = mvopt.solve_constrained_qp_from_r(r)
+            res = {'err_msg':'', 'status':'success', 'solve_status':"qp_"+solution['qp_status'],
+                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_r'],
+                   'assets_inds':mvopt.assets_inds}
+    except Exception as e:
+        traceback.print_exc()
+        res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
+               'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
+               'assets_inds':mvopt.assets_inds}
+    return res
+
+
+
+def mvopt_portf_r_from_var(var:np.float32, low_constraints, high_constraints, rtn_data, assets_inds):
+    try:
+        mvopt = get_mvopt(low_constraints, high_constraints, rtn_data, assets_inds)
+        if low_constraints is None and high_constraints is None:
+            r_star, weights_star = mvopt.get_portf_r_from_var(var) # return float, np.array
+            res = {'err_msg':'', 'status':'success', 'solve_status':"direct",
+                   'portf_w':weights_star,'portf_var':var, 'portf_rtn':r_star,
+                   'assets_inds':mvopt.assets_inds}
+        else:
+            solution = mvopt.solve_constrained_qp_from_var(var)
+            res = {'err_msg':'', 'status':'success', 'solve_status':"qp_"+solution['qp_status'],
+                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_r'],
+                   'assets_inds':mvopt.assets_inds}
+    except Exception as e:
+        traceback.print_exc()
+        res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
+               'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
+               'assets_inds':mvopt.assets_inds}
+    return res
+
+def modify_SolveResult(solve_res:dict, dilate:int, begindate:str, termidate:str):
+    # input solve_res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
+    #                    'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
+    #                    'assets_inds':mvopt.assets_inds}
+    if solve_res['status'] == 'success': # 当运行成功时
+        solve_res['portf_rtn'] /= dilate # rtn 膨胀系数修正
+        solve_res['portf_std'] = np.sqrt(solve_res['portf_var']) / dilate # 标准差计算
+        solve_res['portf_var'] /= (dilate*dilate) # var膨胀系数修正
+        delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
+        solve_res['portf_ann_rtn'] = np.power( 1 + solve_res['portf_rtn'], 1/delta_year) - 1 # 年化利率计算
+    else: # 当运行失败
+        solve_res['portf_std'] = -1 # 标准差
+        solve_res['portf_ann_rtn'] = 0 # 年化利率
+    
+    solve_res['portf_w'] = list(solve_res['portf_w']) # 将np.array转化为list，以输出json
+    # output solve_res = {'err_msg':str(e), 'status':str, 'solve_status':str,
+    #                     'portf_w':list, 'portf_var':float, 'portf_rtn':float, 'portf_std':float, 'portf_ann_rtn':float,
+    #                     'assets_inds':list}
+    return solve_res
+
+
+
 def BackTest_mvopt(expt_tgt_value, solver_func:Callable, dilate, begindate, termidate,  
                    train_rtn_mat_list, hold_rtn_mat_list, assets_inds, low_constraints, high_constraints):
     num_assets = len(assets_inds)
@@ -120,37 +146,20 @@ def BackTest_mvopt(expt_tgt_value, solver_func:Callable, dilate, begindate, term
         # train_rtn_mat shape: (num_assets, back_window_size)
         # solver_func pair with expt_tgt_value: mvopt_portf_var_from_r with expt_r, mvopt_portf_r_from_var with expt_var
         res = solver_func(expt_tgt_value, low_constraints, high_constraints, train_rtn_mat, assets_inds)
-        # 求解失败: {"err_msg":str(e), 'status':'fail'}
-        # 无约束求解: {'portf_w':np_array, 'portf_var':float, 'portf_r':float, 'assets_inds':list}
-        # 带约束求解:  {'portf_w':np_array, 'portf_var':float, 'portf_r':float,"qp_status":'optimal'/'unknown','assets_inds':list}
-        if 'portf_w' in res:
-            # dilate修正
-            res['portf_std'] = np.sqrt(res['portf_var'])
-            res['portf_var'] = res['portf_var'] / np.power(dilate, 2)
-            res['portf_std'] = res['portf_std'] / dilate
-            res['portf_r'] = res['portf_r'] / dilate
-        res_list.append(res)
-
-        if ('portf_w' in res): # 当有解
-            if 'qp_status' not in res: # 若非二次规划
-                portf_w_list.append(res['portf_w'])
-            elif res['qp_status'] == 'optimal': # 若二次规划最优
-                portf_w_list.append(res['portf_w'])
-            else:
-                portf_w_list.append(portf_w_list[-1])
-        else:
-            # 否则，延用上一期的配置
+        # res: {'err_msg':str, 'status':str, 'solve_status':str, 'portf_w':np.array, 'portf_var':float, 'portf_r':float, 'assets_inds':list}
+        if res['status'] == 'success' and  res['solve_status'] in ('direct', 'qp_optimal'):
+            # 只有当运行求解成功，且求解模式满足direct和qp_optimal时，才记录解
+            portf_w_list.append(res['portf_w'])
+        else: # 除此之外，延用上一期的配置
             portf_w_list.append(portf_w_list[-1])
-    # 回测
+        
+        res_list.append( modify_SolveResult(res, dilate, begindate, termidate) )
+    # 回测 并作 dilate修正
     BT_res = rtn_multi_periods(portf_w_list[1:], hold_rtn_mat_list)
-    # BT_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
-    # 回测结果dilate修正
     BT_res = modify_BackTestResult(BT_res, dilate, begindate, termidate)
+    # BT_res = {'rtn':float, 'gross_rtn':float, 'annual_rtn':float, 'trade_days':int, 'total_cost':float}
+    portf_w_list = [list(portf_w) for portf_w in portf_w_list] # 将np.array转化为list，以输出json
     return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_inds}
-
-
-
-
 
 
 
