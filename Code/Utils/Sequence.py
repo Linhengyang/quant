@@ -19,9 +19,16 @@ def strided_slice_1darr(arr, window_size, stride):  # Window len = window_size, 
 # return strided_slices = [ [0,1], [2, 3], [4,5], [6,7], [8, 9] ], rsd_slices = None
 def strided_slicing_w_residual(length, window_size, stride):
     strided_slices = strided_slice_1darr(np.arange(length), window_size, stride)
-    rsd_slice = range( stride * ((length - window_size) // stride + 1), length ) \
-        if stride * ((length - window_size) // stride + 1) < length else None
-    return strided_slices, rsd_slice
+    # strided_slices: 2-d array with shape (num_slices = num_jump + 1, window_size)
+    # strided_slices[-1][0] 开始到 strided_slices[-1][-1], 长度是window_size, 但是 strided_slices[-1][-1]到末尾，不足window_size
+
+    residual_range = range(strided_slices[-1][-1]+1, length) # 从strided_slices[-1][-1] + 1 到末尾, 可为空
+
+    last_short_range = range(strided_slices[-1][0] + stride, length) # 从strided_slices[-1][0] + stride 到末尾, 可为空
+    # 当 window_size = stride时，residual_slice == last_short_slice
+    # last_incomlete_slice = range( stride * ((length - window_size) // stride + 1), length ) \
+    #     if stride * ((length - window_size) // stride + 1) < length else None
+    return strided_slices, residual_range, last_short_range
 
 
 # given length = 10, windows_size =3, stride = 3
@@ -30,9 +37,12 @@ def strided_slicing_w_residual(length, window_size, stride):
 # return strided_indices = [ 0, 2, 4, 6, 8 ], rsd_indx = None
 def strided_indexing_w_residual(length, window_size, stride):
     strided_indices = list( range(0, length-window_size, stride) )
-    next_indx = strided_indices[-1] + stride
-    rsd_indx = next_indx if next_indx < length else None
-    return strided_indices, rsd_indx
+    next_jump_indx = strided_indices[-1] + stride
+    next_jump_indx = next_jump_indx if next_jump_indx < length else None
+
+    residual_index = strided_indices[-1] + window_size + 1
+    residual_index = residual_index if residual_index < length else None
+    return strided_indices, next_jump_indx, residual_index
 
 
 
@@ -45,4 +55,10 @@ def strided_indexing_w_residual(length, window_size, stride):
 
 
 if __name__ == "__main__":
-    print( strided_slicing_w_residual(16, 5, 5) )
+    # print( strided_slicing_w_residual(16, 5, 3) )
+    x = range(5, 5)
+    # a = np.array( [0, 1 ,2 ,3 ,4 ,5 ,6, 7, 8, 9, 10] )
+    if list(x):
+        print('true')
+    else:
+        print('false')

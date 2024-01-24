@@ -28,9 +28,9 @@ def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate):
     SELECT DISTINCT S_IRDCODE, TRADE_DT, {dilate}*PCHG as PCHG
     FROM aidx_eod_prices
     WHERE TRADE_DT >= {startdate} AND TRADE_DT <= {enddate}
-    AND S_IRDCODE in {assets_tuple}
+    AND S_IRDCODE in ("{assets_tuple}")
     '''.format(startdate=int(startdate), enddate=int(enddate),
-               assets_tuple=tuple(assets), dilate=int(rtn_dilate))
+               assets_tuple='","'.join(assets), dilate=int(rtn_dilate))
     
     raw_data = db.GetSQL(sql_query, tbl_type='pddf')
     if raw_data.shape[0] <= 1:
