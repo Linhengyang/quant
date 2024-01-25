@@ -19,23 +19,23 @@ localdb = {
     'path':'Data/asset_allocate/tydb.db'
 }
 
-def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate):
+def db_rtn_data(assets:list, startdate:str, enddate:str, rtn_dilate, tbl_name:str):
     db = DatabaseConnection(localdb)
     assert len(assets) > 0, 'assets index list must not be empty'
     assert int(startdate) <= int(enddate), 'start date must no later than end date'
 
     sql_query = '''
     SELECT DISTINCT S_IRDCODE, TRADE_DT, {dilate}*PCHG as PCHG
-    FROM aidx_eod_prices
+    FROM {tbl_name}
     WHERE TRADE_DT >= {startdate} AND TRADE_DT <= {enddate}
     AND S_IRDCODE in ("{assets_tuple}")
-    '''.format(startdate=int(startdate), enddate=int(enddate),
+    '''.format(tbl_name=tbl_name, startdate=int(startdate), enddate=int(enddate),\
                assets_tuple='","'.join(assets), dilate=int(rtn_dilate))
     
     raw_data = db.GetSQL(sql_query, tbl_type='pddf')
     if raw_data.shape[0] <= 1:
-        raise LookupError('Data 0 Extraction for table aidx_eod_prices from {start} to {end} among {assets_tuple}'.format(
-            start=int(startdate), end=int(enddate), assets_tuple=tuple(assets)
+        raise LookupError('Data 0 Extraction for table {tbl} from {start} to {end} among {assets_tuple}'.format(
+            tbl=tbl_name, start=int(startdate), end=int(enddate), assets_tuple=tuple(assets)
         ))
     data = raw_data.pivot_table(index='S_IRDCODE', columns=['TRADE_DT'], values=['PCHG'])
     rtn_data = data.to_numpy(dtype=np.float32)

@@ -14,7 +14,7 @@ def get_benchmark_rtn_data(begindate, termidate, assets_inds:list, dilate, rebal
     # 取出 begindate (包括) 至 termidate (包括）, 所有的交易日期，已排序
     mkt_dates = db_date_data(begindate, termidate) # 返回numpy of int
     # rtn_data: (num_assets, mkt_days)的numpy matrix, assets_inds: 长度为num_assets的list
-    rtn_data, assets_inds = db_rtn_data(assets=assets_inds, startdate=begindate,enddate=termidate, rtn_dilate=dilate)
+    rtn_data, assets_inds = db_rtn_data(assets_inds, begindate, termidate, dilate, "aidx_eod_prices")
     # 每gapday持仓
     # 当前，月度持仓精简为每20天持仓
     if isinstance(rebal_gapday, int): # 若参数输入了rebal_gapday, 那么以 rebal_gapday作为gapday调仓
@@ -46,7 +46,7 @@ def BackTest_benchmark(begindate, termidate, hold_rtn_mat_list, dilate, assets_i
 
 def parse_benchmark(benchmark:str):
     if benchmark == 'CSI800':
-        assets_inds = ["H00906.CSI"]
+        assets_inds = ["h00906.CSI"]
         rebal_gapday = None
         weights = []
     elif benchmark == "CDCSI":
@@ -54,19 +54,19 @@ def parse_benchmark(benchmark:str):
         rebal_gapday = None
         weights = []
     elif benchmark == "S2D8_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_inds = ["h00906.CSI", "CBA00101.CS"]
         rebal_gapday = 20
         weights = [0.2, 0.8]
     elif benchmark == "S4D6_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_inds = ["h00906.CSI", "CBA00101.CS"]
         rebal_gapday = 20
         weights = [0.4, 0.6]
     elif benchmark == "S5D5_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_inds = ["h00906.CSI", "CBA00101.CS"]
         rebal_gapday = 20
         weights = [0.5, 0.5]
     elif benchmark == "S8D2_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_inds = ["h00906.CSI", "CBA00101.CS"]
         rebal_gapday = 20
         weights = [0.8, 0.2]
     else:
