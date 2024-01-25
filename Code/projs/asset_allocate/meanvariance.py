@@ -48,13 +48,13 @@ def mvopt_portf_var_from_r(r:np.float32, low_constraints, high_constraints, rtn_
         else:
             solution = mvopt.solve_constrained_qp_from_r(r)
             res = {'err_msg':'', 'status':'success', 'solve_status':"qp_"+solution['qp_status'],
-                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_r'],
+                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_rtn'],
                    'assets_ids':mvopt.assets_idlst}
     except Exception as e:
         traceback.print_exc()
         res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
                'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
-               'assets_ids':mvopt.assets_idlst}
+               'assets_ids':assets_idlst}
     return res
 
 
@@ -70,13 +70,13 @@ def mvopt_portf_r_from_var(var:np.float32, low_constraints, high_constraints, rt
         else:
             solution = mvopt.solve_constrained_qp_from_var(var)
             res = {'err_msg':'', 'status':'success', 'solve_status':"qp_"+solution['qp_status'],
-                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_r'],
+                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_rtn'],
                    'assets_ids':mvopt.assets_idlst}
     except Exception as e:
         traceback.print_exc()
         res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
                'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
-               'assets_ids':mvopt.assets_idlst}
+               'assets_ids':assets_idlst}
     return res
 
 
