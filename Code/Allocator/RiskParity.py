@@ -10,7 +10,6 @@
 -------------------------------------------------
 
 """
-import scipy
 import scipy.optimize as scipyopt
 import numpy as np
 
@@ -23,8 +22,8 @@ def loan_only_constraint(x):
 
 class RiskParity:
     def __init__(self, asset_r_mat:np.array, category_mat:np.array=None, tgt_contrib_ratio:np.array=None,
-                 assets_inds:list=[]):
-        self.assets_inds = assets_inds # 记录资产的排列
+                 assets_idlst:list=[]):
+        self.assets_idlst = assets_idlst # 记录资产的排列
         self.asset_r_mat = asset_r_mat
         self.num_assets = asset_r_mat.shape[0] # 资产个数
         self.allocated_weights = None # 初始化资产权重
