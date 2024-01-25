@@ -27,6 +27,7 @@ class RiskParity:
         self.asset_r_mat = asset_r_mat
         self.num_assets = asset_r_mat.shape[0] # 资产个数
         self.allocated_weights = None # 初始化资产权重
+        self.solve_status = "" # 初始化求解状态为空字符
 
         self.cov_mat = np.cov(asset_r_mat)
 
@@ -101,7 +102,9 @@ class RiskParity:
                                 args=[self.cov_mat, self.category_mat, self.tgt_contrib_ratio],
                                 method='SLSQP', constraints=cons, options={'disp':True})
         self.allocated_weights = res.x
-        return res.x
+        self.solve_status = 'optimal' if res.success else 'unknown'
+        return {"portf_w": res.x, "portf_var": self.risk_contribs.sum(), "portf_rtn": self.portf_return,
+                "risk_contribs": self.risk_contribs, "solve_status": self.solve_status}
     
 
 
