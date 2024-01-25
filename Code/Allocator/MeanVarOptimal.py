@@ -18,8 +18,8 @@ import cvxopt
 class MeanVarOpt:
     def __init__(self, expct_rtn_rates:np.array, expct_cov_mat:np.array,
                  low_constraints:np.array=None, high_constraints:np.array=None,
-                 assets_inds:list=[]):
-        self.assets_inds = assets_inds # 记录资产的排列
+                 assets_idlst:list=[]):
+        self.assets_idlst = assets_idlst # 记录资产的排列
         # 检查条件0: 预期收益率向量长度等于协方差矩阵的维度
         assert len(expct_rtn_rates) == expct_cov_mat.shape[0], "Assets number conflicts between returns & covariance"
         self.expct_rtn_rates = expct_rtn_rates
@@ -112,7 +112,7 @@ class MeanVarOpt:
         qp_result = cvxopt.solvers.qp(*qp_args)
         # 返回解出的portf权重，此时达到的最优（小）var, 此时达到的最优（大）r（可能比goal_r要大），求解status
         return {"portf_w":np.array(qp_result['x']).squeeze(1), "portf_var":2.0*qp_result['primal objective'],
-                "portf_r":(self.expct_rtn_rates @ np.array(qp_result['x'])).item(), "qp_status":qp_result['status']}
+                "portf_rtn":(self.expct_rtn_rates @ np.array(qp_result['x'])).item(), "qp_status":qp_result['status']}
 
     # 考虑不等式约束，根据给定的预期波动var(即能承受的最低波动var)，求解portfolio预期收益最大的protf权重，以及此时的r
     def solve_constrained_qp_from_var(self, goal_var:np.float32):
@@ -126,7 +126,7 @@ class MeanVarOpt:
         qp_result = cvxopt.solvers.qp(*qp_args)
         # 返回解出的portf权重，此时达到的最优（小）var（可能比goal_var要大）, 此时达到的最优（大）r，求解status
         return {"portf_w": np.array(qp_result['x']).squeeze(1), "portf_var": 2.0 * qp_result['primal objective'],
-                "portf_r": (self.expct_rtn_rates @ np.array(qp_result['x'])).item(), "qp_status": qp_result['status']}
+                "portf_rtn": (self.expct_rtn_rates @ np.array(qp_result['x'])).item(), "qp_status": qp_result['status']}
 
 
 

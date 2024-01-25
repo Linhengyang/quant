@@ -78,9 +78,9 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True, encoding='ut
 
 
 if __name__ == '__main__':
-    csv_path = 'asset_allocate/aidx2023.csv'
+    csv_path = 'asset_allocate/cbidx2023.csv'
     db_path = 'asset_allocate/tydb.db'
-    tbl_name = 'aidx_eod_prices'
+    tbl_name = 'cbidx_eod_prices'
     # dtypes = ['INT', 'INT', 'INT', 'INT', 'TEXT', 'INT', 'TEXT', 'INT', 'TEXT', 'INT', 'INT', 'INT',]
     dtypes = ['INT', 'TEXT', 'TEXT', 'INT', 'TEXT', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL', 'REAL']
     # printcsv(csv_path, print_numb=5, header=True, encoding='utf-8-sig')

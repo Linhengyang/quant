@@ -10,7 +10,7 @@ sys.dont_write_bytecode = True
 # from werkzeug.middleware.proxy_fix import ProxyFix
 # import json
 # import re
-
+from typing import Callable
 from Code.Allocator.RiskParity import RiskParity
 from Code.projs.asset_allocate.dataload import db_rtn_data, db_date_data
 from Code.Utils.Sequence import strided_slicing_w_residual
@@ -26,13 +26,13 @@ risk_manage_api = Blueprint('risk_manage', __name__)
 
 # risk manage
 # tgt_contrib_ratio = None，为风险平价; 不为None时，为风险预算
-def get_risk_manage(category_mat, tgt_contrib_ratio, rtn_data, assets_inds):
+def get_riskmng(category_mat, tgt_contrib_ratio, rtn_data, assets_idlst):
     if category_mat is not None:
         category_mat = np.array(category_mat)
     if tgt_contrib_ratio is not None:
         tgt_contrib_ratio = np.array(tgt_contrib_ratio)
     try:
-        fin = RiskParity(rtn_data, category_mat, tgt_contrib_ratio, assets_inds=assets_inds)
+        fin = RiskParity(rtn_data, category_mat, tgt_contrib_ratio, assets_idlst)
         portf_w = fin.optimal_solver()
         res = {'portf_w':list(portf_w), 'portf_var':fin.risk_contribs.sum(), 'portf_r':fin.portf_return,\
                'risk_contribs':list(fin.risk_contribs),'assets_inds':fin.assets_inds}

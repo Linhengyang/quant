@@ -1,4 +1,4 @@
-from Code.projs.asset_allocate.dataload import db_rtn_data, db_date_data
+from Code.projs.asset_allocate.dataload import db_rtn_data, db_rtn_data_multi_tbl
 from Code.Utils.Sequence import strided_slicing_w_residual
 from Code.BackTester.BT_AssetAllocate import rtn_multi_periods, modify_BackTestResult
 
@@ -9,12 +9,23 @@ import sys
 sys.dont_write_bytecode = True
 
 
-def get_benchmark_rtn_data(begindate, termidate, assets_inds:list, dilate, rebal_gapday=None):
+def get_benchmark_rtn_data(begindate, termidate, assets_ids:list, tbl_names, dilate, rebal_gapday):
+    '''
+    assets_ids & tbl_names:
+    1. if all assets come from 1 table, then arg {tbl_names} is the string of the table, assets_ids is a list of asset id codes
+        e.g, assets_ids = ['000001.SH', '000002.SH'], tbl_names = 'aidx_eod_prices'
+    2. if assets come from multiple tables, then arg {tbl_names} is the string of tables, assets_ids is a list of lists of asset id code
+    which come from corresponding table name by order.
+        e.g, assets_ids = [['000001.SH', '000002.SH'], ['CBA0001.CBI']], tbl_names = ['aidx_eod_prices', 'cbidx_eod_prices']
+    '''
     # 取数据，一次io解决
-    # 取出 begindate (包括) 至 termidate (包括）, 所有的交易日期，已排序
-    mkt_dates = db_date_data(begindate, termidate) # 返回numpy of int
-    # rtn_data: (num_assets, mkt_days)的numpy matrix, assets_inds: 长度为num_assets的list
-    rtn_data, assets_inds = db_rtn_data(assets=assets_inds, startdate=begindate,enddate=termidate, rtn_dilate=dilate)
+    # rtn_data: (num_assets, mkt_days)的numpy matrix, assets_idlst: 长度为num_assets的list
+    if isinstance(assets_ids[0], list): # assets_ids = [['000001.SH', '000002.SH'], ['CBA0001.CB' ,'CBA0002.CB']]
+        assert isinstance(tbl_names, list), "arg tbl_names must be a list for different tables"
+        rtn_data, assets_idlst = db_rtn_data_multi_tbl(assets_ids, begindate, termidate, dilate, tbl_names)
+    else: # assets_ids = ['000001.SH', '000002.SH']
+        assert isinstance(tbl_names, str), "arg tbl_names must be string"
+        rtn_data, assets_idlst = db_rtn_data(assets_ids, begindate, termidate, dilate, tbl_names)
     # 每gapday持仓
     # 当前，月度持仓精简为每20天持仓
     if isinstance(rebal_gapday, int): # 若参数输入了rebal_gapday, 那么以 rebal_gapday作为gapday调仓
@@ -24,13 +35,13 @@ def get_benchmark_rtn_data(begindate, termidate, assets_inds:list, dilate, rebal
             hold_rtn_mat_list.append( rtn_data.T[last_range].T )
     else: # benchmark不需要调仓
         hold_rtn_mat_list = [rtn_data]
-    return hold_rtn_mat_list, assets_inds
+    return hold_rtn_mat_list, assets_idlst
 
 
 
-def BackTest_benchmark(begindate, termidate, hold_rtn_mat_list, dilate, assets_inds:list, weights:list=[]):
-    assert weights == [] or len(assets_inds) == len(weights), "benchmark asset lists length must match with weights"
-    num_assets = len(assets_inds) # 资产个数
+def BackTest_benchmark(begindate, termidate, hold_rtn_mat_list, dilate, weights:list=[]):
+    num_assets = hold_rtn_mat_list[0].shape[0]
+    assert weights == [] or num_assets == len(weights), "hold_rtn_mat axis 0 lenght must match with weights"
     num_hold_periods = len(hold_rtn_mat_list) # 持仓期数
     if weights == [] : # 如果 没有输入 weights, 默认benchmark里所有资产平均分配
         portf_w_list = [ np.array([1/num_assets,]*num_assets), ] * num_hold_periods
@@ -44,31 +55,56 @@ def BackTest_benchmark(begindate, termidate, hold_rtn_mat_list, dilate, assets_i
     return BT_res
 
 
+benchmark_weights = {
+    "CSI800":{
+        "h00906.CSI":1
+    },
+    "CDCSI":{
+        "CBA00101.CS":1
+    },
+    "S2D8_Mon":{
+        "h00906.CSI":0.2,
+        "CBA00101.CS":0.8
+    },
+    "S4D6_Mon":{
+        "h00906.CSI":0.4,
+        "CBA00101.CS":0.6
+    },
+    "S5D5_Mon":{
+        "h00906.CSI":0.5,
+        "CBA00101.CS":0.5
+    },
+    "S8D2_Mon":{
+        "h00906.CSI":0.8,
+        "CBA00101.CS":0.2
+    }
+}
+
 def parse_benchmark(benchmark:str):
     if benchmark == 'CSI800':
-        assets_inds = ["H00906.CSI"]
+        assets_ids = ["h00906.CSI"]
         rebal_gapday = None
-        weights = []
+        tbl_names = 'aidx_eod_prices'
     elif benchmark == "CDCSI":
-        assets_inds = ["CBA00101.CS"]
+        assets_ids = ["CBA00101.CS"]
         rebal_gapday = None
-        weights = []
+        tbl_names = 'cbidx_eod_prices'
     elif benchmark == "S2D8_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_ids = [["h00906.CSI"], ["CBA00101.CS"]]
         rebal_gapday = 20
-        weights = [0.2, 0.8]
+        tbl_names = ['aidx_eod_prices', 'cbidx_eod_prices']
     elif benchmark == "S4D6_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_ids = [["h00906.CSI"], ["CBA00101.CS"]]
         rebal_gapday = 20
-        weights = [0.4, 0.6]
+        tbl_names = ['aidx_eod_prices', 'cbidx_eod_prices']
     elif benchmark == "S5D5_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_ids = [["h00906.CSI"], ["CBA00101.CS"]]
         rebal_gapday = 20
-        weights = [0.5, 0.5]
+        tbl_names = ['aidx_eod_prices', 'cbidx_eod_prices']
     elif benchmark == "S8D2_Mon":
-        assets_inds = ["H00906.CSI", "CBA00101.CS"]
+        assets_ids = [["h00906.CSI"], ["CBA00101.CS"]]
         rebal_gapday = 20
-        weights = [0.8, 0.2]
+        tbl_names = ['aidx_eod_prices', 'cbidx_eod_prices']
     else:
         raise ValueError("wrong code {benchmark} for benchmark".format(benchmark=benchmark))
-    return assets_inds, weights, rebal_gapday
+    return assets_ids, tbl_names, rebal_gapday
