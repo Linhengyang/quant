@@ -1,22 +1,16 @@
-import pandas as pd 
 import numpy as np
-# from datetime import datetime, timedelta
 from Code.DataLoader.dbconnect import DatabaseConnection
 from Code.Utils.Sequence import strided_slicing_w_residual
 
-# remotedb = {
-#     'ip':'xx.xxx.xxx.xx',
-#     'port':0000,
-#     'user':'xxxxxx',
-#     'pwd':'xxxxx',
-#     'db':'xxxx'
-# }
+_REMOTE_DB = {
+    'ip':'xx.xxx.xxx.xx',
+    'port':0000,
+    'user':'xxxxxx',
+    'pwd':'xxxxx',
+    'db':'xxxx'
+}
 
-# localdb = {
-#     'path':'XX/xx.db'
-# }
-
-localdb = {
+_LOCAL_DB = {
     'path':'Data/asset_allocate/tydb.db'
 }
 
@@ -155,7 +149,7 @@ def get_train_rtn_data(
         dilate:int,
         assets_ids:list,
         tbl_names:str,
-        db_info:dict=localdb
+        db_info:dict
         ):
     '''
     assets_ids & tbl_names:

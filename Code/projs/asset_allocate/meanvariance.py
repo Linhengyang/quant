@@ -9,7 +9,11 @@ import sys
 sys.dont_write_bytecode = True
 from typing import Callable
 from Code.Allocator.MeanVarOptimal import MeanVarOpt
-from Code.projs.asset_allocate.dataload import get_train_rtn_data
+from Code.projs.asset_allocate.dataload import (
+    get_train_rtn_data, 
+    _REMOTE_DB, 
+    _LOCAL_DB
+)
 from Code.BackTester.BT_AssetAllocate import (
     rtn_multi_periods,
     modify_BackTestResult
@@ -27,6 +31,8 @@ static_folder = "Static"
 template_folder = 'Template'
 
 mvopt_api = Blueprint('mean_var', __name__)
+
+_DB = _LOCAL_DB
 
 # mean-variance optimal
 
@@ -92,6 +98,8 @@ def mvopt_portf_r_from_var(var:np.float32, low_constraints, high_constraints, rt
                'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0, 'portf_std':-1,
                'assets_ids':assets_idlst}
     return res
+
+
 
 
 def modify_SolveResult(solve_res:dict, dilate:int):
@@ -171,8 +179,15 @@ def mvopt():
     else: # 将个别空输入设为上限 1000 
         high_constraints = [upper_bound if upper_bound is not None else 1000 for upper_bound in high_constraints]
     # 获取训练和持仓数据
-    train_rtn_mat_list, hold_rtn_mat_list, assets_idlst = get_train_rtn_data(begindate, termidate, gapday, back_window_size,\
-                                                                             dilate, assets_ids, 'aidx_eod_prices')
+    train_rtn_mat_list, hold_rtn_mat_list, assets_idlst = get_train_rtn_data(begindate,
+                                                                             termidate,
+                                                                             gapday,
+                                                                             back_window_size,
+                                                                             dilate,
+                                                                             assets_ids,
+                                                                             'aidx_eod_prices',
+                                                                             _DB
+                                                                             )
     # 根据目标求解
     mvo_target = inputs['mvo_target']
     expt_tgt_value = inputs['expt_tgt_value'] # expt_tgt_value 可以是预期收益率也可以是预期方差
@@ -181,12 +196,25 @@ def mvopt():
     elif mvo_target == "maxReturn": # 当目标是给定预期方差，最大化收益率时
         solver_func = mvopt_portf_r_from_var
     elif mvo_target == "sharp": # 当目标是最大化sharp ratio时
-        raise NotImplementedError('sharp ratio maximized not implemented yet')
+        raise NotImplementedError(
+            'sharp ratio maximized not implemented yet'
+            )
     else:
-        raise ValueError("wrong target code. must be one of minWave, maxReturn, sharp")
+        raise ValueError(
+            "wrong target code. must be one of minWave, maxReturn, sharp"
+            )
     # mvopt_res = {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_idlst}
-    mvopt_res = BackTest_mvopt(expt_tgt_value, solver_func, dilate, begindate, termidate,
-                               train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, low_constraints, high_constraints)
+    mvopt_res = BackTest_mvopt(expt_tgt_value,
+                               solver_func,
+                               dilate,
+                               begindate,
+                               termidate,
+                               train_rtn_mat_list,
+                               hold_rtn_mat_list,
+                               assets_idlst,
+                               low_constraints,
+                               high_constraints
+                               )
     
     # benchmark求解
     bm_id = inputs['benchmark']
@@ -196,20 +224,35 @@ def mvopt():
                                                                    bm_assets_ids,
                                                                    bm_tbl_names,
                                                                    dilate,
-                                                                   bm_rebal_gapday)
+                                                                   bm_rebal_gapday,
+                                                                   _DB
+                                                                   )
     bm_weights = [ _BENCHMARK_WEIGHTS[bm_id][asset] for asset in bm_assets_idlst ]
-    bm_bt_res = BackTest_benchmark(begindate, termidate, bm_hold_rtn_mat_list, dilate, bm_weights)
+
+    bm_bt_res = BackTest_benchmark(begindate,
+                                   termidate,
+                                   bm_hold_rtn_mat_list,
+                                   dilate,
+                                   bm_weights
+                                   )
     # bm_bt_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
 
     mvopt_res['benchmark'] = bm_bt_res
     mvopt_res['excess'] = {'rtn':mvopt_res['backtest']['rtn'] - bm_bt_res['rtn'],
-                           'annual_rtn':mvopt_res['backtest']['annual_rtn'] - bm_bt_res['annual_rtn']}
-    
-    # output mvopt_res =
-    # {
-    # 'details':res_list, 'weights':portf_w_list, 'assets_id':assets_idlst,
-    # 'backtest':{'rtn':, 'trade_days':, 'total_cost':, 'gross_rtn':, 'annual_rtn':},
-    # 'benchmark':{'rtn':, 'trade_days':, 'total_cost':, 'gross_rtn':, 'annual_rtn':},
-    # 'excess':{'rtn':, 'annual_rtn':}
-    # }
+                           'annual_rtn':mvopt_res['backtest']['annual_rtn'] - bm_bt_res['annual_rtn']
+                           }
+    '''
+    output mvopt_res =
+    {
+        'details':res_list,
+        'weights':portf_w_list,
+        'assets_id':assets_idlst,
+        'backtest':
+            {'rtn':, 'trade_days':, 'total_cost':, 'gross_rtn':, 'annual_rtn':},
+        'benchmark':
+            {'rtn':, 'trade_days':, 'total_cost':, 'gross_rtn':, 'annual_rtn':},
+        'excess':
+            {'rtn':, 'annual_rtn':}
+    }
+    '''
     return mvopt_res

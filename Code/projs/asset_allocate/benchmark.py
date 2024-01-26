@@ -1,4 +1,4 @@
-from Code.projs.asset_allocate.dataload import db_rtn_data, db_rtn_data_multi_tbl, localdb
+from Code.projs.asset_allocate.dataload import db_rtn_data, db_rtn_data_multi_tbl, _LOCAL_DB, _REMOTE_DB
 from Code.Utils.Sequence import strided_slicing_w_residual
 from Code.BackTester.BT_AssetAllocate import rtn_multi_periods, modify_BackTestResult
 
@@ -9,6 +9,7 @@ import sys
 sys.dont_write_bytecode = True
 
 
+
 def get_benchmark_rtn_data(
         begindate,
         termidate,
@@ -16,7 +17,7 @@ def get_benchmark_rtn_data(
         tbl_names,
         dilate,
         rebal_gapday,
-        db_dict:dict=localdb
+        db_dict:dict
         ):
     '''
     assets_ids & tbl_names:
