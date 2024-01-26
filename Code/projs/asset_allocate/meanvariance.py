@@ -7,33 +7,45 @@ from pprint import pprint
 import traceback
 import sys
 sys.dont_write_bytecode = True
-# from werkzeug.middleware.proxy_fix import ProxyFix
-# import json
-# import re
 from typing import Callable
 from Code.Allocator.MeanVarOptimal import MeanVarOpt
 from Code.projs.asset_allocate.dataload import get_train_rtn_data
-from Code.BackTester.BT_AssetAllocate import rtn_multi_periods, modify_BackTestResult
-from Code.projs.asset_allocate.benchmark import get_benchmark_rtn_data, BackTest_benchmark, parse_benchmark, benchmark_weights
+from Code.BackTester.BT_AssetAllocate import (
+    rtn_multi_periods,
+    modify_BackTestResult
+    )
+from Code.projs.asset_allocate.benchmark import (
+    get_benchmark_rtn_data,
+    BackTest_benchmark,
+    parse_benchmark,
+    _BENCHMARK_WEIGHTS
+    )
 
 warnings.filterwarnings('ignore')
 app_name = __name__
 static_folder = "Static"
 template_folder = 'Template'
 
-# asset_allocate_app = Flask(app_name, static_folder=static_folder, template_folder=template_folder)
 mvopt_api = Blueprint('mean_var', __name__)
 
 # mean-variance optimal
 
-def get_mvopt(low_constraints, high_constraints, rtn_data, assets_idlst):
+def get_mvopt(
+        low_constraints,
+        high_constraints,
+        rtn_data,
+        assets_idlst
+        ):
     cov_mat = np.cov(rtn_data)
     rtn_rates = rtn_data.mean(axis=1)
+
     if low_constraints is not None:
         low_constraints = np.array(low_constraints)
     if high_constraints is not None:
         high_constraints = np.array(high_constraints)
+    
     finmodel = MeanVarOpt(rtn_rates, cov_mat, low_constraints, high_constraints, assets_idlst)
+
     return finmodel
 
 
@@ -43,17 +55,18 @@ def mvopt_portf_var_from_r(r:np.float32, low_constraints, high_constraints, rtn_
         if low_constraints is None and high_constraints is None:
             var_star, weights_star = mvopt.get_portf_var_from_r(r) # return float, np.array
             res = {'err_msg':'', 'status':'success', 'solve_status':"direct",
-                   'portf_w':weights_star, 'portf_var':var_star, 'portf_rtn':r,
+                   'portf_w':weights_star, 'portf_var':var_star, 'portf_rtn':r, 'portf_std':np.sqrt(var_star),
                    'assets_ids':mvopt.assets_idlst}
         else:
             solution = mvopt.solve_constrained_qp_from_r(r)
             res = {'err_msg':'', 'status':'success', 'solve_status':"qp_"+solution['qp_status'],
-                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_rtn'],
+                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'],
+                   'portf_rtn':solution['portf_rtn'], 'portf_std':np.sqrt(solution['portf_var']),
                    'assets_ids':mvopt.assets_idlst}
     except Exception as e:
         traceback.print_exc()
         res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
-               'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
+               'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0, 'portf_std':-1,
                'assets_ids':assets_idlst}
     return res
 
@@ -65,35 +78,30 @@ def mvopt_portf_r_from_var(var:np.float32, low_constraints, high_constraints, rt
         if low_constraints is None and high_constraints is None:
             r_star, weights_star = mvopt.get_portf_r_from_var(var) # return float, np.array
             res = {'err_msg':'', 'status':'success', 'solve_status':"direct",
-                   'portf_w':weights_star,'portf_var':var, 'portf_rtn':r_star,
+                   'portf_w':weights_star,'portf_var':var, 'portf_rtn':r_star, 'portf_std':np.sqrt(var),
                    'assets_ids':mvopt.assets_idlst}
         else:
             solution = mvopt.solve_constrained_qp_from_var(var)
             res = {'err_msg':'', 'status':'success', 'solve_status':"qp_"+solution['qp_status'],
-                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'], 'portf_rtn':solution['portf_rtn'],
+                   'portf_w':solution['portf_w'], 'portf_var':solution['portf_var'],
+                   'portf_rtn':solution['portf_rtn'],  'portf_std':np.sqrt(solution['portf_var']),
                    'assets_ids':mvopt.assets_idlst}
     except Exception as e:
         traceback.print_exc()
         res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
-               'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
+               'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0, 'portf_std':-1,
                'assets_ids':assets_idlst}
     return res
 
 
-def modify_SolveResult(solve_res:dict, dilate:int, begindate:str, termidate:str):
+def modify_SolveResult(solve_res:dict, dilate:int):
     # input solve_res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
     #                    'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
     #                    'assets_ids':mvopt.assets_ids}
     if solve_res['status'] == 'success': # 当运行成功时
         solve_res['portf_rtn'] /= dilate # rtn 膨胀系数修正
-        solve_res['portf_std'] = np.sqrt(solve_res['portf_var']) / dilate # 标准差计算
+        solve_res['portf_std'] /= dilate # std 膨胀系数修正
         solve_res['portf_var'] /= (dilate*dilate) # var膨胀系数修正
-        delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
-        solve_res['portf_ann_rtn'] = np.power( 1 + solve_res['portf_rtn'], 1/delta_year) - 1 # 年化利率计算
-    else: # 当运行失败
-        solve_res['portf_std'] = -1 # 标准差
-        solve_res['portf_ann_rtn'] = 0 # 年化利率
-    
     solve_res['portf_w'] = list(solve_res['portf_w']) # 将np.array转化为list，以输出json
     # output solve_res = {'err_msg':str(e), 'status':str, 'solve_status':str,
     #                     'portf_w':list, 'portf_var':float, 'portf_rtn':float, 'portf_std':float, 'portf_ann_rtn':float,
@@ -117,7 +125,7 @@ def BackTest_mvopt(expt_tgt_value, solver_func:Callable, dilate, begindate, term
         else: # 除此之外，延用上一期的配置
             portf_w_list.append(portf_w_list[-1])
         
-        res_list.append( modify_SolveResult(res, dilate, begindate, termidate) )
+        res_list.append( modify_SolveResult(res, dilate) )
     # 回测 并作 dilate修正
     BT_res = rtn_multi_periods(portf_w_list[1:], hold_rtn_mat_list)
     BT_res = modify_BackTestResult(BT_res, dilate, begindate, termidate)
@@ -185,7 +193,7 @@ def mvopt():
     bm_assets_ids, bm_tbl_names, bm_rebal_gapday = parse_benchmark(bm_id)
     bm_hold_rtn_mat_list, bm_assets_idlst = get_benchmark_rtn_data(begindate, termidate, bm_assets_ids,
                                                                    bm_tbl_names, dilate, bm_rebal_gapday)
-    bm_weights = [ benchmark_weights[bm_id][asset] for asset in bm_assets_idlst ]
+    bm_weights = [ _BENCHMARK_WEIGHTS[bm_id][asset] for asset in bm_assets_idlst ]
     bm_bt_res = BackTest_benchmark(begindate, termidate, bm_hold_rtn_mat_list, dilate, bm_weights)
     # bm_bt_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
 
