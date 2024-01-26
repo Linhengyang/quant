@@ -26,7 +26,7 @@ def db_rtn_data(
         enddate:str,
         rtn_dilate:int,
         tbl_name:str,
-        db_info:dict=localdb
+        db_info:dict
         ):
     db = DatabaseConnection(db_info)
 
@@ -69,7 +69,7 @@ def db_rtn_data_multi_tbl(
         enddate:str,
         rtn_dilate:int,
         tbl_names:list,
-        db_info:dict=localdb
+        db_info:dict
         ):
     db = DatabaseConnection(db_info)
 
@@ -118,7 +118,7 @@ def db_rtn_data_multi_tbl(
 def db_date_data(
         startdate:str,
         enddate:str,
-        db_info:dict=localdb
+        db_info:dict
         ):
     # get trade dates for assets from startdate to enddate
     db = DatabaseConnection(db_info)
@@ -148,13 +148,14 @@ def db_date_data(
 
 # get data for train and backtest
 def get_train_rtn_data(
-        begindate,
-        termidate,
-        gapday,
-        back_window_size,
-        dilate,
-        assets_ids,
-        tbl_names
+        begindate:str,
+        termidate:str,
+        gapday:int,
+        back_window_size:int,
+        dilate:int,
+        assets_ids:list,
+        tbl_names:str,
+        db_info:dict=localdb
         ):
     '''
     assets_ids & tbl_names:
@@ -195,7 +196,8 @@ def get_train_rtn_data(
         all_rtn_data, assets_idlst = db_rtn_data_multi_tbl(assets_ids,
                                                            str(earlistdate),
                                                            termidate, dilate,
-                                                           tbl_names
+                                                           tbl_names,
+                                                           db_info
                                                            )
     else: # assets_ids = ['000001.SH', '000002.SH']
         assert isinstance(tbl_names, str), "arg tbl_names must be string for function get_train_rtn_data"
@@ -203,17 +205,19 @@ def get_train_rtn_data(
                                                  str(earlistdate),
                                                  termidate,
                                                  dilate,
-                                                 tbl_names
+                                                 tbl_names,
+                                                 db_info
                                                  )
     assert all_rtn_data.shape[1] == len(all_mkt_dates),\
-        f'market dates with length {len(all_mkt_dates)} and Index return dates {all_rtn_data.shape[1]} mismatch'.
+        f'market dates with length {len(all_mkt_dates)} and Index return dates {all_rtn_data.shape[1]} mismatch'
     
     rtn_data = all_rtn_data[:, begindate_idx:] # 从 all_rtn_data 中，取出 begindate到termidate的列
 
     # 每一期持仓起始，往后持仓gapday天或最后一天
     strided_slices, _, last_range = strided_slicing_w_residual(rtn_data.shape[1],
                                                                gapday,
-                                                               gapday
+                                                               gapday,
+                                                               db_info
                                                                )
     
     hold_rtn_mat_list = list(rtn_data.T[strided_slices].transpose(0,2,1))
