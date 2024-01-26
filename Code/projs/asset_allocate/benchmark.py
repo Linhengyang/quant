@@ -1,4 +1,4 @@
-from Code.projs.asset_allocate.dataload import db_rtn_data, db_rtn_data_multi_tbl
+from Code.projs.asset_allocate.dataload import db_rtn_data, db_rtn_data_multi_tbl, localdb
 from Code.Utils.Sequence import strided_slicing_w_residual
 from Code.BackTester.BT_AssetAllocate import rtn_multi_periods, modify_BackTestResult
 
@@ -15,7 +15,8 @@ def get_benchmark_rtn_data(
         assets_ids:list,
         tbl_names,
         dilate,
-        rebal_gapday
+        rebal_gapday,
+        db_dict:dict=localdb
         ):
     '''
     assets_ids & tbl_names:
@@ -38,7 +39,8 @@ def get_benchmark_rtn_data(
                                                        begindate,
                                                        termidate,
                                                        dilate,
-                                                       tbl_names
+                                                       tbl_names,
+                                                       db_dict
                                                        )
     else: # assets_ids = ['000001.SH', '000002.SH']
         assert isinstance(tbl_names, str), "arg tbl_names must be string"
@@ -46,7 +48,8 @@ def get_benchmark_rtn_data(
                                              begindate,
                                              termidate,
                                              dilate,
-                                             tbl_names
+                                             tbl_names,
+                                             db_dict
                                              )
     # 每gapday持仓
     # 当前，月度持仓精简为每20天持仓

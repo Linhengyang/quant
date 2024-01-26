@@ -172,7 +172,9 @@ def get_train_rtn_data(
     '''
     # 取数据，一次io解决
     # 取出2000-01-01至终止日, 所有的交易日期，已排序
-    all_mkt_dates = db_date_data('20000101', termidate) # 返回numpy of int
+    all_mkt_dates = db_date_data('20000101',
+                                 termidate,
+                                 db_info) # 返回numpy of int
     # 涉及到的最早的date，是begindate往前数 back_window_size 个交易日的日期。因为begindate当日早上完成调仓，需要前一天至前back_window_size天
     
     begindate_idx = np.where(all_mkt_dates==int(begindate))[0].item()
@@ -216,8 +218,7 @@ def get_train_rtn_data(
     # 每一期持仓起始，往后持仓gapday天或最后一天
     strided_slices, _, last_range = strided_slicing_w_residual(rtn_data.shape[1],
                                                                gapday,
-                                                               gapday,
-                                                               db_info
+                                                               gapday
                                                                )
     
     hold_rtn_mat_list = list(rtn_data.T[strided_slices].transpose(0,2,1))
