@@ -12,7 +12,7 @@ sys.dont_write_bytecode = True
 # import re
 from typing import Callable
 from Code.Allocator.RiskParity import RiskParity
-from Code.projs.asset_allocate.dataload import db_rtn_data, db_date_data
+from Code.projs.asset_allocate.dataload import get_train_rtn_data
 from Code.Utils.Sequence import strided_slicing_w_residual
 from Code.BackTester.BT_AssetAllocate import rtn_multi_periods
 
@@ -26,34 +26,61 @@ risk_manage_api = Blueprint('risk_manage', __name__)
 
 # risk manage
 # tgt_contrib_ratio = None，为风险平价; 不为None时，为风险预算
-def get_riskmng(category_mat, tgt_contrib_ratio, rtn_data, assets_idlst):
+def riskmng_portf(category_mat, tgt_contrib_ratio, rtn_data, assets_idlst):
     if category_mat is not None:
         category_mat = np.array(category_mat)
     if tgt_contrib_ratio is not None:
         tgt_contrib_ratio = np.array(tgt_contrib_ratio)
     try:
         fin = RiskParity(rtn_data, category_mat, tgt_contrib_ratio, assets_idlst)
-        portf_w = fin.optimal_solver()
-        res = {'portf_w':list(portf_w), 'portf_var':fin.risk_contribs.sum(), 'portf_r':fin.portf_return,\
-               'risk_contribs':list(fin.risk_contribs),'assets_inds':fin.assets_inds}
+        res = fin.optimal_solver()
+        res['err_msg'] = ''
+        res['status'] = 'success'
+        res['assets_ids'] = fin.assets_idlst
+        # res = {"portf_w": np.array, "portf_var": float, "portf_rtn": float, "risk_contribs": np.array, "solve_status": string
+        #        "err_msg": string, 'status':string, 'assets_ids':list}
     except Exception as e:
         traceback.print_exc()
-        res = {"err_msg":str(e), 'status':'fail'}
+        res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
+               'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
+               'assets_ids':assets_idlst}
     return res
+
+
+def modify_SolveResult(solve_res:dict, dilate:int, begindate:str, termidate:str):
+    # input solve_res = {'err_msg':str(e), 'status':'fail', 'solve_status':'',
+    #                    'portf_w':np.array([]), 'portf_var':-1, 'portf_rtn':0,
+    #                    'assets_ids':mvopt.assets_ids}
+    if solve_res['status'] == 'success': # 当运行成功时
+        solve_res['portf_rtn'] /= dilate # rtn 膨胀系数修正
+        solve_res['portf_std'] = np.sqrt(solve_res['portf_var']) / dilate # 标准差计算
+        solve_res['portf_var'] /= (dilate*dilate) # var膨胀系数修正
+        delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
+        solve_res['portf_ann_rtn'] = np.power( 1 + solve_res['portf_rtn'], 1/delta_year) - 1 # 年化利率计算
+    else: # 当运行失败
+        solve_res['portf_std'] = -1 # 标准差
+        solve_res['portf_ann_rtn'] = 0 # 年化利率
+    
+    solve_res['portf_w'] = list(solve_res['portf_w']) # 将np.array转化为list，以输出json
+    # output solve_res = {'err_msg':str(e), 'status':str, 'solve_status':str,
+    #                     'portf_w':list, 'portf_var':float, 'portf_rtn':float, 'portf_std':float, 'portf_ann_rtn':float,
+    #                     'assets_ids':list}
+    return solve_res
+
 
 
 
 # risk manage
 # tgt_contrib_ratio = None，为风险平价; 不为None时，为风险预算
 @risk_manage_api.route('/asset_allocate/risk_manage', methods=['POST'])
-def application_riskmanage():
+def riskmng():
     inputs = request.json
     assets_info = inputs["assets_info"] # assets_info
     num_assets = len(assets_info)
     # 资产信息: id, 类别
-    assets_inds, assets_categs, categs, tgt_risk_ratio = [], [], [], []
+    assets_ids, assets_categs, categs, tgt_risk_ratio = [], [], [], []
     for asset in assets_info:
-        assets_inds.append(asset['id'])
+        assets_ids.append(asset['id'])
         if 'category' in asset:
             next_categ = asset['category'] # 如果该资产输入了类别, 那么该类别被记录下来
         else:
@@ -90,42 +117,15 @@ def application_riskmanage():
     else:
         strategy = "budget"
     print('BackTest for risk {strtg} from {begindate} to {termidate} trading in every {gapday} upon assets {assets}'.\
-          format(strtg=strategy, begindate=begindate, termidate=termidate,gapday=gapday, assets=assets_inds))
-
-    # 取数据，一次io解决
-    # 取出2000-01-01至终止日, 所有的交易日期，已排序
-    all_mkt_dates = db_date_data('20000101', termidate) # 返回numpy of int
-    # 涉及到的最早的date，是begindate往前数 back_window_size 个交易日的日期。因为begindate当日早上完成调仓，需要前一天至前back_window_size天
-    begindate_idx = np.where(all_mkt_dates==int(begindate))[0].item()
-    earlistdate_idx = begindate_idx-back_window_size
-    if earlistdate_idx < 0:
-        raise ValueError('Traceback earlier than 2000-01-01 from {begindate} going back with {back_window_size} days'\
-                         .format(begindate=begindate, back_window_size=back_window_size))
-    # 裁剪掉前面无用的日期
-    all_mkt_dates = all_mkt_dates[earlistdate_idx:]
-    earlistdate = all_mkt_dates[0] # 最早天数是第一天
-    begindate_idx -= earlistdate_idx #
-    earlistdate_idx = 0
-    # all_rtn_data shape: (num_assets, begindate - back_window_size to begindate to termidate)
-    # which is back_window_size + num_period_days_from_begin_to_termi
-    all_rtn_data, assets_inds = db_rtn_data(assets=assets_inds, startdate=str(earlistdate),enddate=termidate, rtn_dilate=dilate)
-    assert all_rtn_data.shape[1] == len(all_mkt_dates),\
-        'market dates with length {mkt_len} and Index return dates {index_len} mismatch'.\
-            format(mkt_len=len(all_mkt_dates),index_len=all_rtn_data.shape[1])
-    rtn_data = all_rtn_data[:, begindate_idx:] # 从 all_rtn_data 中，取出 begindate到termidate的列
-    portf_w_list, res_list = [[1/num_assets,]*num_assets, ], []
-    # 每一期持仓起始，往后持仓gapday天
-    strided_slices, rsd_slices = strided_slicing_w_residual(rtn_data.shape[1], gapday, gapday)
-    hold_rtn_mat_list = list(rtn_data.T[strided_slices].transpose(0,2,1))
-    if rsd_slices is not None:
-        hold_rtn_mat_list.append( rtn_data.T[rsd_slices].T )
-    # 每一期调仓日期起始，往前回溯back_window_size天。调仓日期在持仓日之前
-    strided_slices, _ = strided_slicing_w_residual(all_rtn_data.shape[1]-1, back_window_size, gapday)
-    train_rtn_mat_list = list(all_rtn_data.T[strided_slices].transpose(0,2,1))
-    assert len(train_rtn_mat_list) == len(hold_rtn_mat_list), 'train & hold period mismatch error. Please check code'
+          format(strtg=strategy, begindate=begindate, termidate=termidate,gapday=gapday, assets=assets_ids))
+    
+    # 获取训练和持仓数据
+    train_rtn_mat_list, hold_rtn_mat_list, assets_idlst = get_train_rtn_data(begindate, termidate, gapday, back_window_size,\
+                                                                             dilate, assets_ids, 'aidx_eod_prices')
+    portf_w_list, res_list = [[1/num_assets]*num_assets,], []
     for train_rtn_mat in train_rtn_mat_list:
         # train_rtn_mat shape: (num_assets, back_window_size)
-        res = get_risk_manage(category_mat, tgt_contrib_ratio, train_rtn_mat, assets_inds)
+        res = riskmng_portf(category_mat, tgt_contrib_ratio, train_rtn_mat, assets_idlst)
         # 求解失败: {"err_msg":str(e), 'status':'fail'}
         # 求解成功: {'portf_w':list, 'portf_var':float, 'portf_r':float, 'risk_contribs':list, 'assets_inds':list}
         if 'portf_w' in res: # 当有解
@@ -147,4 +147,4 @@ def application_riskmanage():
     BT_res['gross_rtn'] = BT_res['gross_rtn']/dilate
     delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
     BT_res['annual_rtn'] = np.power( 1 + BT_res['rtn'], 1/delta_year) - 1
-    return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_inds}
+    return {'details':res_list, 'backtest':BT_res ,'weights':portf_w_list[1:], 'assets_id':assets_idlst}

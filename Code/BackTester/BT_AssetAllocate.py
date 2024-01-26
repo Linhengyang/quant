@@ -1,6 +1,8 @@
 import numpy as np
+import functools
 from typing import Callable
 from datetime import datetime
+
 
 def rtn_period(portf_w:np.array, period_rtn_mat:np.array):
     assert len(portf_w) == len(period_rtn_mat),\
@@ -24,6 +26,20 @@ def reallocate_cost(portf_w_list:list, period_rtn_mat_list:list, invest_amount):
     return [0]*len(portf_w_list)
 
 
+def decorate_backtestRes(dilate:int, begindate:str, termidate:str):
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            # input result = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float}
+            result = function(*args, **kwargs)
+            result['rtn'] = result['rtn']/dilate
+            result['gross_rtn'] = result['gross_rtn']/dilate
+            delta_year = ( datetime.strptime(termidate, '%Y%m%d') - datetime.strptime(begindate, '%Y%m%d') ).days / 365
+            result['annual_rtn'] = np.power( 1 + result['rtn'], 1/delta_year) - 1
+            # output result = {'rtn': float, 'gross_rtn': float, 'annual_rtn':float, 'trade_days': int, 'total_cost': float}
+            return result
+        return wrapper
+    return decorator
 
 
 
