@@ -183,7 +183,8 @@ def mvopt():
     # benchmark求解
     bm_id = inputs['benchmark']
     bm_assets_ids, bm_tbl_names, bm_rebal_gapday = parse_benchmark(bm_id)
-    bm_hold_rtn_mat_list, bm_assets_idlst = get_benchmark_rtn_data(begindate, termidate, bm_assets_ids, bm_tbl_names, dilate, bm_rebal_gapday)
+    bm_hold_rtn_mat_list, bm_assets_idlst = get_benchmark_rtn_data(begindate, termidate, bm_assets_ids,
+                                                                   bm_tbl_names, dilate, bm_rebal_gapday)
     bm_weights = [ benchmark_weights[bm_id][asset] for asset in bm_assets_idlst ]
     bm_bt_res = BackTest_benchmark(begindate, termidate, bm_hold_rtn_mat_list, dilate, bm_weights)
     # bm_bt_res = {'rtn': float, 'trade_days': int,'total_cost': float, 'gross_rtn': float, 'annual_rtn':float}
