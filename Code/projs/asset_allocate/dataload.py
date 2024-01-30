@@ -3,10 +3,11 @@ from Code.DataLoader.dbconnect import DatabaseConnection
 from Code.Utils.Sequence import strided_slicing_w_residual
 import typing as t
 
+
 __all__ = (
-    "_REMOTE_DB",
-    "_LOCAL_DB"
+    "_DB"
 )
+
 
 _REMOTE_DB = {
     'ip':'xx.xxx.xxx.xx',
@@ -20,6 +21,9 @@ _REMOTE_DB = {
 _LOCAL_DB = {
     'path':'Data/asset_allocate/tydb.db'
 }
+
+
+_DB = _LOCAL_DB
 
 
 def _db_rtn_data(

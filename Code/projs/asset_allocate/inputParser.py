@@ -3,10 +3,9 @@ from operator import itemgetter
 import functools
 import typing as t
 import numpy as np
-from Code.projs.asset_allocate.dataload import (
+from Code.projs.asset_allocate.dataLoad import (
     get_train_hold_rtn_data,
-    _REMOTE_DB,
-    _LOCAL_DB
+    _DB
 )
 
 
@@ -193,7 +192,7 @@ def parseInput(
             dilate,
             assets_ids,
             tbl_names,
-            db_info = _LOCAL_DB
+            _DB
         )
     
     global constraints

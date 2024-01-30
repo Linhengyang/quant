@@ -1,7 +1,6 @@
-from Code.projs.asset_allocate.dataload import(
+from Code.projs.asset_allocate.dataLoad import(
     get_benchmark_rtn_data,
-    _LOCAL_DB,
-    _REMOTE_DB
+    _DB
     )
 from Code.BackTester.BT_AssetAllocate import(
     rtn_multi_periods,
@@ -10,7 +9,6 @@ from Code.BackTester.BT_AssetAllocate import(
 
 from Code.projs.asset_allocate.inputParser import *
 import numpy as np
-from datetime import datetime
 import typing as t
 import sys
 sys.dont_write_bytecode = True
@@ -50,7 +48,7 @@ class benchmarkBT:
 
 
     def __init__(self,
-                 benchmark: str,
+                 benchmark: str
                  ) -> None:
         
         self.__bchmk = benchmark
@@ -63,7 +61,7 @@ class benchmarkBT:
             assets_ids,
             tbl_names,
             dilate,
-            _LOCAL_DB,
+            _DB,
             rebal_gapday)
         
         weights = [ self._BENCHMARK_WEIGHTS[benchmark][asset] for asset in self.assets_idlst ]
