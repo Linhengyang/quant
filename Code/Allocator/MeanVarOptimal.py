@@ -29,8 +29,8 @@ class MeanVarOpt:
             self,
             expct_rtn_rates: np.array,
             expct_cov_mat: np.array,
-            constraints: list[ t.Union[np.array, None],
-                               t.Union[np.array, None]],
+            constraints: t.Tuple[ t.Union[np.array, None],
+                                 t.Union[np.array, None]],
             assets_idlst: list
             ) -> None:
         
