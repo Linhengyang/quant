@@ -3,7 +3,7 @@ from Code.projs.asset_allocate.dataLoad import(
     _DB
     )
 from Code.BackTester.BT_AssetAllocate import basicBT_multiPeriods
-from Code.projs.asset_allocate.inputParser import *
+from Code.projs.asset_allocate.runner import *
 from Code.Utils.Decorator import deDilate, addAnnual, addSTD
 
 import numpy as np
