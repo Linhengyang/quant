@@ -36,7 +36,7 @@ class meanvarOptStrat:
     __slots__ = ("__inputs", "__assets_idlst", "__flag",  "__portf_w_list", "__detail_solve_results")
 
     def __init__(self,
-                 inputs: str
+                 inputs: Any
                  ) -> None:
         
         self.__inputs = inputs
@@ -74,10 +74,10 @@ class meanvarOptStrat:
 
             cur_res = self.__solve_single_mvopt(
                 train_rtn_mat,
-                constraints,
                 self.__assets_idlst,
-                expt_tgt_value,
-                self.__flag
+                constraints,
+                self.__flag,
+                expt_tgt_value
                 )
 
             if cur_res['solve_status'] in ('direct', 'qp_optimal'):
@@ -110,7 +110,7 @@ class meanvarOptStrat:
 
     @property
     def portf_w_list(self) -> list:
-        return self.__portf_w_list
+        return self.__portf_w_list[1:]
 
 
 
@@ -123,7 +123,15 @@ class meanvarOptStrat:
 
 
     def _get_meanvar_data_params(self) -> Any:
-        
+        '''
+        return:
+            train_rtn_mat_list: list of ndarray
+            hold_rtn_mat_list: list of ndarray
+            assets_idlst: list of str
+            constraints: list of ndarray or none
+            mvo_target: str
+            expt_tgt_value: npfloat
+        '''
         assets_info_lst = self.__inputs["assets_info"] # assets_info
 
         assets_dict, src_tbl_dict = parseAssets2dicts(assets_info_lst)
@@ -160,26 +168,41 @@ class meanvarOptStrat:
 
 
 
-
     @staticmethod
     @addSTD('portf_var')
     @deDilate(dilate)
     def __solve_single_mvopt(
         train_rtn_mat: np.ndarray,
         assets_idlst: t.List[str],
-        constraints: t.Tuple[
-                        t.Union[np.ndarray, None],
-                        t.Union[np.ndarray, None]],
+        constraints: t.List[t.Union[np.ndarray, None]],
         mvo_target: str,
         expt_tgt_value: np.float32,
         ) -> Any:
-
+        '''
+        input:
+            train_rtn_mat: np.ndarray,
+            assets_idlst: t.List[str],
+            constraints: t.List[t.Union[np.ndarray, None]],
+            mvo_target: str,
+            expt_tgt_value: np.float32,
+        return:
+        de-dilate
+            portf_w: np.ndarray
+            portf_rtn: np.float32
+            portf_var: np.float32
+            portf_std: np.float32
+            solve_status: str
+            assets_idlst: list
+        '''
         cov_mat = np.cov(train_rtn_mat)
         rtn_rates = train_rtn_mat.mean(axis=1)
 
+
+        fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
+        
+        res = fin(expt_tgt_value, mvo_target)
         try:
-            fin = MeanVarOpt(rtn_rates, cov_mat,
-                            constraints, assets_idlst)
+            fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
             
             res = fin(expt_tgt_value, mvo_target)
             
