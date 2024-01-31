@@ -3,12 +3,25 @@ from operator import itemgetter
 import functools
 import typing as t
 import numpy as np
-from Code.projs.asset_allocate.dataLoad import (
-    get_train_hold_rtn_data,
-    _DB
-)
+from flask import request, Blueprint
+import warnings
+from markupsafe import escape
+from pprint import pprint
+import traceback
+import sys
+sys.dont_write_bytecode = True
+
+from Code.projs.asset_allocate.benchmark import benchmarkStrat
+from Code.projs.asset_allocate.meanvarOpt import meanarOptStrat
 
 
+
+warnings.filterwarnings('ignore')
+app_name = __name__
+static_folder = "Static"
+template_folder = 'Template'
+
+mvopt_api = Blueprint('mean_var', __name__)
 
 
 __all__ = [
@@ -184,3 +197,44 @@ def getAssetInfo_rls2glob(
     assets_dict, src_tbl_dict = parseAssets2dicts(assets_info_lst)
 
     return assets_dict, src_tbl_dict
+
+
+
+
+
+@mvopt_api.route('/asset_allocate/mean_var_opt', methods=['POST'])
+def runner():
+    '''
+    output:
+    {
+        'details': [res1, res2],
+        'weights': [portf_w1, portf_w2],
+        'assets_id': ['id1', 'id2'],
+        'backtest':
+            {'rtn', 'var', 'std', 'trade_days':, 'total_cost':, 
+            'gross_rtn':, 'annual_rtn':},
+        'benchmark':
+            {'rtn', 'var', 'std', 'trade_days':, 'total_cost':,
+            'gross_rtn':, 'annual_rtn':},
+        'excess':
+            {'rtn':, 'annual_rtn':}
+    }
+    '''
+
+    inputs = request.json
+
+
+    mvopt_strat = meanarOptStrat(inputs)
+    BT_mvopt = mvopt_strat.backtest()
+
+    bchmk_strat = benchmarkStrat(benchmark)
+    BT_bchmak = bchmk_strat.backtest()
+
+    return {
+        'details': mvopt_strat.detail_solve_results,
+        'weights': mvopt_strat.portf_w_list,
+        'assets_id': mvopt_strat.assets_idlst,
+        'backtest': BT_mvopt,
+        'benchmark': BT_bchmak
+    }
+    
