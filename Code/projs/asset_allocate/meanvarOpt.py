@@ -12,7 +12,7 @@ from Code.projs.asset_allocate.dataLoad import (
 from Code.BackTester.BT_AssetAllocate import (
     basicBT_multiPeriods
 )
-from Code.projs.asset_allocate.inputParser import *
+from Code.projs.asset_allocate.runner import *
 from Code.projs.asset_allocate.inputParser import (
     parseAssets2dicts,
     get_constraints
@@ -22,7 +22,7 @@ from Code.Utils.Decorator import deDilate, addAnnual, addSTD
 
 
 
-class meanarOptStrat:
+class meanvarOptStrat:
     '''
     attributes:
         1. assets_idlst
@@ -33,7 +33,7 @@ class meanarOptStrat:
     methods:
         1. backtest()  get backtest result
     '''
-    __slots__ = ("__assets_idlst", "__flag",  "__portf_w_list", "__detail_solve_results")
+    __slots__ = ("__inputs", "__assets_idlst", "__flag",  "__portf_w_list", "__detail_solve_results")
 
     def __init__(self,
                  inputs: str
@@ -62,7 +62,7 @@ class meanarOptStrat:
         '''
 
         train_rtn_mat_list, hold_rtn_mat_list, self.__assets_idlst, constraints, self.__flag,\
-            expt_tgt_value = self._get_meanvar_data_params(self.__inputs)
+            expt_tgt_value = self._get_meanvar_data_params()
         
         num_assets = len(self.__assets_idlst)
 
@@ -156,7 +156,7 @@ class meanarOptStrat:
         constraints = get_constraints( assets_dict, assets_idlst )
 
         return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, \
-            constraints, mvo_target, expt_tgt_value
+               constraints, mvo_target, expt_tgt_value
 
 
 
@@ -165,11 +165,11 @@ class meanarOptStrat:
     @addSTD('portf_var')
     @deDilate(dilate)
     def __solve_single_mvopt(
-        train_rtn_mat: np.array,
+        train_rtn_mat: np.ndarray,
         assets_idlst: t.List[str],
         constraints: t.Tuple[
-                        t.Union[np.array, None],
-                        t.Union[np.array, None]],
+                        t.Union[np.ndarray, None],
+                        t.Union[np.ndarray, None]],
         mvo_target: str,
         expt_tgt_value: np.float32,
         ) -> Any:

@@ -22,7 +22,7 @@ class MeanVarOpt:
     return:
     basicPortfSolveRes
     {
-        'portf_w': np.array
+        'portf_w': np.ndarray
         'portf_rtn': np.float32
         'portf_var': np.float32
         'solve_status': str
@@ -39,10 +39,10 @@ class MeanVarOpt:
 
     def __init__(
             self,
-            expct_rtn_rates: np.array,
-            expct_cov_mat: np.array,
-            constraints: t.Tuple[ t.Union[np.array, None],
-                                 t.Union[np.array, None]],
+            expct_rtn_rates: np.ndarray,
+            expct_cov_mat: np.ndarray,
+            constraints: t.Tuple[ t.Union[np.ndarray, None],
+                                 t.Union[np.ndarray, None]],
             assets_idlst: list
             ) -> None:
         
@@ -55,15 +55,15 @@ class MeanVarOpt:
         assert len(expct_rtn_rates) == expct_cov_mat.shape[0],\
             "Assets number conflicts between returns & covariance"
         
-        self.__expct_rtn_rates: np.array = expct_rtn_rates
-        self.__expct_cov_mat: np.array = expct_cov_mat
+        self.__expct_rtn_rates: np.ndarray = expct_rtn_rates
+        self.__expct_cov_mat: np.ndarray = expct_cov_mat
 
         self.__build_quad_curve() # 已经足够画出mean-var曲线
 
         self.__build_quad_program()
         self.__solve_status: str = "" # 求解状态
 
-        self.__portf_w: np.array = np.array([]) # portfolio 实际权重 待求解
+        self.__portf_w: np.ndarray = np.array([]) # portfolio 实际权重 待求解
         self.__portf_var: np.float32 = np.float32(-1) # porfolio 实际var 待求解
         self.__portf_rtn: np.float32 = np.float32(0) # porfolio 实际rtn 待求解
 
@@ -139,7 +139,7 @@ class MeanVarOpt:
             return self.__portf_w @ self.__expct_cov_mat @ self.__portf_w
 
     @property
-    def portf_w(self) -> np.array:
+    def portf_w(self) -> np.ndarray:
         if len(self.__portf_w) > 0:
             return self.__portf_w
         else:
@@ -155,12 +155,12 @@ class MeanVarOpt:
     @staticmethod
     def __cal_portf_w_unbounds_from_rtn(
         goal_r: np.float32,
-        expct_rtn_rates: np.array,
-        cov_mat_inv: np.array,
+        expct_rtn_rates: np.ndarray,
+        cov_mat_inv: np.ndarray,
         norm_term: np.float32,
         quad_term: np.float32,
         lin_term: np.float32,
-        const_term: np.float32) -> np.array:
+        const_term: np.float32) -> np.ndarray:
 
         ones = np.ones_like(expct_rtn_rates)
         return goal_r * 1.0 / norm_term * cov_mat_inv @ ( quad_term * expct_rtn_rates - lin_term * ones ) \

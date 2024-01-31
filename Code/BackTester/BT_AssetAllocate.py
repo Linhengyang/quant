@@ -8,8 +8,8 @@ from Code.Utils.Type import basicBackTestRes
 
 
 def rtn_period(
-        portf_w: np.array,
-        period_rtn_mat: np.array
+        portf_w: np.ndarray,
+        period_rtn_mat: np.ndarray
         ) -> Any:
     
     assert len(portf_w) == period_rtn_mat.shape[0],\
@@ -22,8 +22,8 @@ def rtn_period(
 
 
 def day_portfw_on_period(
-        init_portf_w: np.array,
-        day_rtn_on_period: np.array) -> np.array:
+        init_portf_w: np.ndarray,
+        day_rtn_on_period: np.ndarray) -> np.ndarray:
     
     '''
     return:
@@ -73,8 +73,8 @@ def reallocate_cost(
 
 
 def basicBT_multiPeriods(
-        portf_w_list: t.List[np.array],
-        period_rtn_mat_list: t.List[np.array],
+        portf_w_list: t.List[np.ndarray],
+        period_rtn_mat_list: t.List[np.ndarray],
         trade_cost_list: t.List[np.float32] = [], 
         invest_amount: t.Union[bool, float] = False
         ) -> basicBackTestRes:

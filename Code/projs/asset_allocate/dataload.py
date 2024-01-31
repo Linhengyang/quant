@@ -34,7 +34,7 @@ def db_rtn_data(
         rtn_dilate: int,
         tbl_names: t.Union[t.List[str], str],
         db_info: dict
-        ) -> t.Tuple[np.array, list]:
+        ) -> t.Tuple[np.ndarray, list]:
     '''
     input example:
         for multiple assets from different tables:
@@ -105,7 +105,7 @@ def db_date_data(
         enddate: str,
         db_info: dict,
         tbl_name: str = 'dim_trade_date_ashare',
-        ) -> np.array:
+        ) -> np.ndarray:
     # get trade dates for assets from startdate to enddate
     db = DatabaseConnection(db_info)
 
@@ -143,7 +143,7 @@ def get_train_hold_rtn_data(
         assets_ids: t.Union[t.List[str], t.List[list]],
         tbl_names: t.Union[str, t.List[str]],
         db_info: dict
-        ) -> t.Tuple[t.List[np.array], t.List[np.array], list]:
+        ) -> t.Tuple[t.List[np.ndarray], t.List[np.ndarray], list]:
     '''
     assets_ids & tbl_names:
     1. if all assets come from 1 table, then arg {tbl_names} is the string of the table,
@@ -244,7 +244,7 @@ def get_benchmark_rtn_data(
         dilate: int,
         db_dict: dict,
         rebal_gapday: t.Union[int, None] = None,
-        ) -> t.Tuple[t.List[np.array], list]:
+        ) -> t.Tuple[t.List[np.ndarray], list]:
     '''
     assets_ids & tbl_names:
     1. if all assets come from 1 table, then arg {tbl_names} is the string of the table, 
