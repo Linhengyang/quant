@@ -339,6 +339,7 @@ class MeanVarOpt:
             'portf_rtn': self.portf_rtn,
             'portf_var': self.portf_var,
             'solve_status': self.solve_status,
+            'assets_idlst': self.assets_idlst
             }
 
 
