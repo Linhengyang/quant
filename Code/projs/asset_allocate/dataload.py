@@ -26,61 +26,6 @@ _LOCAL_DB = {
 _DB = _LOCAL_DB
 
 
-def _db_rtn_data(
-        assets: t.List[str],
-        startdate: str,
-        enddate: str,
-        rtn_dilate: int,
-        tbl_name: str,
-        db_info: dict
-        ) -> t.Tuple[np.array, list]:
-
-    '''
-    input example:
-    for assets from one table:
-    assets =    ["000001.SH", "000002.SH", "CBA0001.CB", "CBA00002.CB"]
-    tbl_names = 'aidx_eod_prices'
-    '''
-
-    db = DatabaseConnection(db_info)
-
-    assert len(assets) > 0, \
-        'assets index list must not be empty'
-    
-    assert int(startdate) <= int(enddate), \
-        'start date must no later than end date'
-
-    sql_query = \
-    '''
-    SELECT DISTINCT S_IRDCODE, TRADE_DT, {dilate}*PCHG as PCHG
-    FROM {tbl_name}
-    WHERE TRADE_DT >= {startdate} AND TRADE_DT <= {enddate}
-    AND S_IRDCODE in ("{assets_tuple}")
-    '''.format(
-        tbl_name=tbl_name,
-        startdate=int(startdate),
-        enddate=int(enddate),
-        assets_tuple='","'.join(assets),
-        dilate=int(rtn_dilate)
-        )
-    
-    raw_data = db.GetSQL(sql_query, tbl_type='pddf')
-
-    if raw_data.shape[0] <= 1:
-        raise LookupError(
-            f'Data 0 Extraction for table {tbl_name} from {startdate} to {enddate} among {tuple(assets)}'
-            )
-    
-    data = raw_data.pivot_table(index='S_IRDCODE',
-                                columns=['TRADE_DT'],
-                                values=['PCHG'])
-    
-    rtn_data = data.to_numpy(dtype=np.float32)
-    assets_ids = data.index.to_list()
-    
-    return rtn_data, assets_ids
-
-
 
 def db_rtn_data(
         assets: t.Union[t.List[list], t.List[str]],
