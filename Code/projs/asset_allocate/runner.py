@@ -2,6 +2,7 @@ import warnings
 from operator import itemgetter
 from flask import request, Blueprint
 from typing import Any
+import copy
 
 warnings.filterwarnings('ignore')
 app_name = __name__
@@ -50,8 +51,8 @@ def runner():
     '''
     output:
     {
-        'details': [res1, res2],
-        'weights': [portf_w1, portf_w2],
+        'details': [res1 = {'portf_w':[], 'portf_rtn': ,...}, res2],
+        'weights': [portf_w1 = [], portf_w2 = [], ...],
         'assets_id': ['id1', 'id2'],
         'backtest':
             {'rtn', 'var', 'std', 'trade_days':, 'total_cost':, 
@@ -68,6 +69,7 @@ def runner():
 
     release2global(inputs)
 
+
     from Code.projs.asset_allocate.benchmark import benchmarkStrat
     from Code.projs.asset_allocate.meanvarOpt import meanvarOptStrat
 
@@ -77,9 +79,19 @@ def runner():
     bchmk_strat = benchmarkStrat(benchmark)
     BT_bchmak = bchmk_strat.backtest()
 
+
+    # serialize
+    details = copy.deepcopy(mvopt_strat.detail_solve_results)
+    weights = copy.deepcopy(mvopt_strat.portf_w_list)
+
+    for det_res in details:
+        det_res['portf_w'] = list( det_res['portf_w'] )
+
+    weights = [list(portf_w) for portf_w in weights]
+
     return {
-        'details': mvopt_strat.detail_solve_results,
-        'weights': mvopt_strat.portf_w_list,
+        'details': details,
+        'weights': weights,
         'assets_id': mvopt_strat.assets_idlst,
         'backtest': BT_mvopt,
         'benchmark': BT_bchmak
