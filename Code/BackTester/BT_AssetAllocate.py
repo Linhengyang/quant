@@ -79,6 +79,9 @@ def basicBT_multiPeriods(
         invest_amount: t.Union[bool, float] = False
         ) -> basicBackTestRes:
     '''
+    intput:
+        portf_w_list: list of weight array
+        period_rtn_mat_list: list of ndarray
     return:
     {
         'rtn': np.float32
