@@ -14,10 +14,20 @@
 import numpy as np
 import cvxopt
 import typing as t
+from Code.Utils.Type import basicPortfSolveRes
 
 ## 均值-方差最优化求解器
 class MeanVarOpt:
-
+    '''
+    return: 
+    {
+        'portf_w': np.array
+        'portf_rtn': np.float32
+        'portf_var': np.float32
+        'solve_status': str
+    }
+    
+    '''
     __slots__ = ("assets_idlst", "__low_constraints", "__high_constraints",
                  "__no_bounds", "__expct_rtn_rates", "__expct_cov_mat", 
                  "__solve_status", "__portf_w", "__portf_var", "__portf_rtn", 
@@ -304,7 +314,7 @@ class MeanVarOpt:
     def __call__(
             self,
             tgt_value:np.float32,
-            mode: str) -> dict:
+            mode: str) -> basicPortfSolveRes:
         
         # 计算模式
         if mode not in ['minWave', 'maxReturn', 'sharp']:
@@ -325,11 +335,11 @@ class MeanVarOpt:
             raise NotImplementedError('mode sharp note implemented')
         
         return {
-            'portf_w':self.portf_w,
-            'portf_rtn':self.portf_rtn,
-            'portf_var':self.portf_var,
-            'solve_status':self.solve_status,
-        }
+            'portf_w': self.portf_w,
+            'portf_rtn': self.portf_rtn,
+            'portf_var': self.portf_var,
+            'solve_status': self.solve_status,
+            }
 
 
 
