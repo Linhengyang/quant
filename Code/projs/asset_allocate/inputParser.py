@@ -196,7 +196,7 @@ def parseInput(
         )
     
     global constraints
-    constraints = get_constraints( assets_dict,assets_idlst )
+    constraints = get_constraints( assets_dict, assets_idlst )
 
     return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst
 
