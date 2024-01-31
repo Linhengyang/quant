@@ -19,7 +19,8 @@ from Code.Utils.Type import basicPortfSolveRes
 ## 均值-方差最优化求解器
 class MeanVarOpt:
     '''
-    return: 
+    return:
+    basicPortfSolveRes
     {
         'portf_w': np.array
         'portf_rtn': np.float32
@@ -314,7 +315,7 @@ class MeanVarOpt:
 
     def __call__(
             self,
-            tgt_value:np.float32,
+            tgt_value: np.float32,
             mode: str) -> basicPortfSolveRes:
         
         # 计算模式
