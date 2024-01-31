@@ -41,14 +41,14 @@ class MeanVarOpt:
             self,
             expct_rtn_rates: np.ndarray,
             expct_cov_mat: np.ndarray,
-            constraints: t.Tuple[ t.Union[np.ndarray, None],
-                                 t.Union[np.ndarray, None]],
+            constraints: t.List[t.Union[np.ndarray, None]],
             assets_idlst: list
             ) -> None:
         
         self.assets_idlst = assets_idlst # 记录资产的排列
         # 下限，上限
         self.__low_constraints, self.__high_constraints = constraints
+        
         self.__no_bounds = self.__low_constraints is None and self.__high_constraints is None
 
         # 检查条件0: 预期收益率向量长度等于协方差矩阵的维度
