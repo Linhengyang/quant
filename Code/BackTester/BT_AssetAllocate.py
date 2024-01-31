@@ -72,7 +72,7 @@ def reallocate_cost(
 
 
 
-def BT_multi_periods(
+def basicBT_multiPeriods(
         portf_w_list: t.List[np.array],
         period_rtn_mat_list: t.List[np.array],
         trade_cost_list: t.List[np.float32] = [], 
