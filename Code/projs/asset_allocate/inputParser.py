@@ -17,8 +17,7 @@ __all__ = [
     "dilate",
     "back_window_size",
     "gapday",
-    "mvo_target",
-    "benchmark"
+    "benchmark",
 ]
 
 
@@ -69,7 +68,17 @@ def get_constraints(
             t.Union[np.array, None],
             t.Union[np.array, None]
             ]:
+    '''
+    input:
+        1. assets_dict,  {'id': {'categ':, 'l_b', 'u_b'} }
+            key is asset_id, value is {'categ', 'l_b', 'u_b'}
+        2. assets_idlst, [ 'id1', 'id2', 'id3',... ]
     
+    return:
+        low_bounds
+        upper_bounds
+    np.array of low/upper bounds with the order of assets_idlst
+    '''
     low_bounds, upper_bounds = [], []
 
     for asset_id in assets_idlst:
@@ -104,16 +113,23 @@ def get_tbl_asset(asset_id:str, *args, **kwargs) -> str:
 
 
 
-def parse2dicts(
+def parseAssets2dicts(
         assets_info_lst: t.List[dict]
         ) -> t.Tuple[
             t.Dict[str, dict],
             t.Dict[str, t.List[str]]
             ]:
     '''
+    Input:
+        assets_info_lst, list of {'id':, 'low_b':, 'upper_b':, 'categ': ...}
+
     return:
-        1. assets_dict, key is asset_id, value is {'categ', 'l_b', 'u_b'}
-        2. src_tbl_dict, key is table name, value is [asset ids from table]
+        1. assets_dict, {'id': {'categ':, 'l_b', 'u_b'} }
+            key is asset_id, value is {'categ', 'l_b', 'u_b'}
+        2. src_tbl_dict, {'tbl_name': ['id1', 'id2'] }
+            key is table name, value is [asset ids from table]
+    
+    duplicated asset ID will only keep the last record
     '''
     assets_dict, src_tbl_dict = {}, {}
 
@@ -136,67 +152,35 @@ def parse2dicts(
     
 
 
-
-
-
-def parseInput(
+def getAssetInfo_rls2glob(
         inputs: Any
         ) -> t.Tuple[
-            t.List[np.array],
-            t.List[np.array],
-            t.List[str]
+            t.Dict[str, dict],
+            t.Dict[str, t.List[str]]
             ]:
-
+    
     assets_info_lst = inputs["assets_info"] # assets_info
 
-    num_assets = len(assets_info_lst)
+    # 持仓起始日，持仓终结日，膨胀系数, 调仓周期, 基准代号, 回看窗口天数
+    global begindate, termidate, dilate, gapday, benchmark, back_window_size
 
-    # 持仓起始日，持仓终结日，膨胀系数, 回看窗口天数, 调仓频率，最优化目标, 目标值, 基准代号
-    global begindate, termidate, dilate, gapday, \
-           mvo_target, benchmark, back_window_size
-
-    begindate, termidate, dilate, back_window_size, gapday, mvo_target,\
-    expt_tgt_value, benchmark =\
+    begindate, termidate, dilate, gapday, benchmark, back_window_size = \
         itemgetter(
             "begindate",
             "termidate",
             "rtn_dilate",
-            "back_window_size",
             "gapday",
-            "mvo_target",
-            "expt_tgt_value",
-            "benchmark"
-            )(inputs)
+            "benchmark",
+            "back_window_size",
+        )(inputs)
     
-    print(
-        f'Back Test for mean-variance-optimal strategy from {begindate} to {termidate} \
-          trading in every {gapday} upon {num_assets} assets')
+    print(f'release begindate {begindate}, termidate {termidate}, dilate {dilate},\
+            gapday {gapday}, benchmark {benchmark}, back_window_size {back_window_size}\
+            to global')
     
     # 类型转换
-    gapday, back_window_size, dilate, expt_tgt_value =\
-          int(gapday), int(back_window_size), int(dilate), np.float32(expt_tgt_value)
-    
-    assets_dict, src_tbl_dict = parse2dicts(assets_info_lst)
+    gapday, back_window_size, dilate = int(gapday), int(back_window_size), int(dilate)
 
-    tbl_names = list( src_tbl_dict.keys() )
-    assets_ids = [ src_tbl_dict[tbl] for tbl in tbl_names]
-    
-    train_rtn_mat_list, hold_rtn_mat_list, assets_idlst = \
-        get_train_hold_rtn_data(
-            begindate,
-            termidate,
-            gapday,
-            back_window_size,
-            dilate,
-            assets_ids,
-            tbl_names,
-            _DB
-        )
-    
-    constraints = get_constraints( assets_dict, assets_idlst )
+    assets_dict, src_tbl_dict = parseAssets2dicts(assets_info_lst)
 
-    return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, constraints, expt_tgt_value
-
-
-
-    
+    return assets_dict, src_tbl_dict
