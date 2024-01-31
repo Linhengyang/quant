@@ -18,9 +18,7 @@ __all__ = [
     "back_window_size",
     "gapday",
     "mvo_target",
-    "expt_tgt_value",
-    "benchmark",
-    "constraints"
+    "benchmark"
 ]
 
 
@@ -154,8 +152,8 @@ def parseInput(
     num_assets = len(assets_info_lst)
 
     # 持仓起始日，持仓终结日，膨胀系数, 回看窗口天数, 调仓频率，最优化目标, 目标值, 基准代号
-    global begindate, termidate, dilate, back_window_size,\
-           gapday, mvo_target, expt_tgt_value, benchmark
+    global begindate, termidate, dilate, gapday, \
+           mvo_target, benchmark, back_window_size
 
     begindate, termidate, dilate, back_window_size, gapday, mvo_target,\
     expt_tgt_value, benchmark =\
@@ -195,10 +193,9 @@ def parseInput(
             _DB
         )
     
-    global constraints
     constraints = get_constraints( assets_dict, assets_idlst )
 
-    return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst
+    return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, constraints, expt_tgt_value
 
 
 
