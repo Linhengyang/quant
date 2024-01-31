@@ -33,7 +33,7 @@ def _db_rtn_data(
         rtn_dilate: int,
         tbl_name: str,
         db_info: dict
-        ) -> t.Tuple(np.array, list):
+        ) -> t.Tuple[np.array, list]:
 
     '''
     input example:
@@ -89,7 +89,7 @@ def db_rtn_data(
         rtn_dilate: int,
         tbl_names: t.Union[t.List[str], str],
         db_info: dict
-        ) -> t.Tuple(np.array, list):
+        ) -> t.Tuple[np.array, list]:
     '''
     input example:
         for multiple assets from different tables:

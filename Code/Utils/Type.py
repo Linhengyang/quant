@@ -23,5 +23,3 @@ class basicBackTestRes(TypedDict):
     total_cost: np.float32
     gross_rtn: np.float32
 
-
-

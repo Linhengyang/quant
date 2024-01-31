@@ -6,7 +6,7 @@ def strided_slice_1darr(
         arr: t.Sequence,
         window_size: int,
         stride: int
-        ) -> t.list[list]:
+        ) -> t.List[list]:
     '''
     1-D array slices to 2-D array with window length L and stride S  ---> 2-D array with shape(nrows, L)
     nrows=max step number through 1-D array with stride S
@@ -36,7 +36,7 @@ def strided_slicing_w_residual(
         length:int,
         window_size:int,
         stride:int
-        ) -> t.Tuple(list, range, range):
+        ) -> t.Tuple[list, range, range]:
     '''
     given length = 10, window_size = 3, stride = 3
     return strided_slices = [ [0,1,2], [3,4,5], [6,7,8] ], rsd_slices = [9,]
@@ -65,7 +65,7 @@ def strided_indexing_w_residual(
         length:int,
         window_size:int,
         stride:int
-        ) -> t.Tuple(list, t.Union[int, None], t.Union[int, None]):
+        ) -> t.Tuple[list, t.Union[int, None], t.Union[int, None]]:
     '''
     given length = 10, windows_size =3, stride = 3
     return strided_indices = [0, 3, 6], rsd_indx = 9
