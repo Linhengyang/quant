@@ -51,6 +51,20 @@ class benchmarkBT:
         
         self.__bchmk = benchmark
 
+
+    @addAnnual('rtn', begindate, termidate)
+    @deDilate(dilate)
+    def backtest(self) -> dict:
+        '''
+        de-dilated
+        'rtn': np.float32
+        'var': np.float32,
+        'trade_days': int,
+        'total_cost': float,
+        'gross_rtn': np.float32
+        'annual_rtn': np.float32
+        '''
+
         assets_ids, tbl_names, rebal_gapday = self.parse_benchmark(benchmark)
 
         self.__hold_rtn_mat_list, self.assets_idlst = get_benchmark_rtn_data(
@@ -72,21 +86,7 @@ class benchmarkBT:
         self.__num_hold_periods = len(self.__hold_rtn_mat_list) # 持仓期数
 
         self.__portf_w_list = [np.array(weights), ] * self.__num_hold_periods
-    
 
-
-    @addAnnual('rtn', begindate, termidate)
-    @deDilate(dilate)
-    def backtest(self) -> dict:
-        '''
-        de-dilated
-        'rtn': np.float32
-        'var': np.float32,
-        'trade_days': int,
-        'total_cost': float,
-        'gross_rtn': np.float32
-        'annual_rtn': np.float32
-        '''
         return BT_multi_periods(self.__portf_w_list,
                                 self.__hold_rtn_mat_list)
     
