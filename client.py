@@ -35,36 +35,36 @@ inputs = {
           "assets_info":[
               {
                 "id":"000001.SH",
-                "lower_bound":-10,
-                "upper_bound":20,
+                "lower_bound":'',
+                "upper_bound":'',
                 "category":"index",
                 "asset_risk_ratio":0.4
               },
               {
                 "id":"000016.SH",
-                "lower_bound":-10,
-                "upper_bound":20,
+                "lower_bound":'',
+                "upper_bound":'',
                 "category":"index",
                 "asset_risk_ratio":0.1
               },
               {
                 "id":"000002.SH",
-                "lower_bound":-10,
-                "upper_bound":20,
+                "lower_bound":'',
+                "upper_bound":'',
                 "category":"index",
                 "asset_risk_ratio":0.2
               },
               {
                 "id":"000009.SH",
-                "lower_bound":-10,
-                "upper_bound":20,
+                "lower_bound":'',
+                "upper_bound":'',
                 "category":"index",
                 "asset_risk_ratio":0.1
               },
               {
                 "id":"000010.SH",
-                "lower_bound":-10,
-                "upper_bound":20,
+                "lower_bound":'',
+                "upper_bound":'',
                 "category":"index",
                 "asset_risk_ratio":0.2
               },

@@ -13,151 +13,336 @@
 
 import numpy as np
 import cvxopt
+import typing as t
+from Code.Utils.Type import basicPortfSolveRes
 
 ## 均值-方差最优化求解器
 class MeanVarOpt:
+    '''
+    return:
+    basicPortfSolveRes
+    {
+        'portf_w': np.ndarray
+        'portf_rtn': np.float32
+        'portf_var': np.float32
+        'solve_status': str
+        'assets_idlst': list
+    }
+    
+    '''
+    __slots__ = ("assets_idlst", "__low_constraints", "__high_constraints",
+                 "__no_bounds", "__expct_rtn_rates", "__expct_cov_mat", 
+                 "__solve_status", "__portf_w", "__portf_var", "__portf_rtn", 
+                 "__cov_mat_inv", "__quad_term", "__const_term", "__lin_term", 
+                 "__norm_term", "__vertex", "__num_assets",
+                 "__P", "__q", "__A", "__G", "__h", "__b")
+
     def __init__(
             self,
-            expct_rtn_rates:np.array,
-            expct_cov_mat:np.array,
-            low_constraints:np.array=None,
-            high_constraints:np.array=None,
-            assets_idlst:list=[]
-            ):
+            expct_rtn_rates: np.ndarray,
+            expct_cov_mat: np.ndarray,
+            constraints: t.List[t.Union[np.ndarray, None]],
+            assets_idlst: list
+            ) -> None:
         
         self.assets_idlst = assets_idlst # 记录资产的排列
+        # 下限，上限
+        self.__low_constraints, self.__high_constraints = constraints
+        
+        self.__no_bounds = self.__low_constraints is None and self.__high_constraints is None
+
         # 检查条件0: 预期收益率向量长度等于协方差矩阵的维度
         assert len(expct_rtn_rates) == expct_cov_mat.shape[0],\
             "Assets number conflicts between returns & covariance"
         
-        self.expct_rtn_rates = expct_rtn_rates
-        self.expct_cov_mat = expct_cov_mat
-        self.goal_rtn_rate_portf = None # 目标portfolio预期收益率待设定
+        self.__expct_rtn_rates: np.ndarray = expct_rtn_rates
+        self.__expct_cov_mat: np.ndarray = expct_cov_mat
 
-        self._build_quad_curve() # 已经足够画出mean-var曲线
+        self.__build_quad_curve() # 已经足够画出mean-var曲线
 
-        # 不等式约束（上下限）输入检查
-        if low_constraints is not None: # 对权重下限作检查
-            # 检查条件1：权重下限之和要小于等于1
-            assert low_constraints.sum() <= 1.0,\
-                "Sum of low bounds of weights of assets must be smaller or equal to 1"
-        #     # 检查条件2：每个权重下限都要大于等于0且小于等于1（即不允许卖空）
-        #     assert all(low_constraints >= 0.0), "Low bounds must be larger or equal to 0"
-        #     assert all(low_constraints <= 1.0), "Low bounds must be smaller or equal to 1"
-        # if high_constraints is not None:
-        #     # 检查条件3：每个权重上限都要大于等于0且小于等于1（即不允许卖空）
-        #     assert all(high_constraints >= 0.0), "High bounds must be larger or equal to 0"
-        #     assert all(high_constraints <= 1.0), "High bounds must be smaller or equal to 1"
-        if low_constraints  is not None and high_constraints is not None:
-            # 检查条件4：每个权重下限都要小于等于各自权重上限
-            assert all(low_constraints <= high_constraints),\
-                "low bound must be be smaller or equal to high bound"
-            
-        self.low_constraints = low_constraints
-        self.high_constraints = high_constraints
+        self.__build_quad_program()
+        self.__solve_status: str = "" # 求解状态
 
-        self._build_quad_program()
+        self.__portf_w: np.ndarray = np.array([]) # portfolio 实际权重 待求解
+        self.__portf_var: np.float32 = np.float32(-1) # porfolio 实际var 待求解
+        self.__portf_rtn: np.float32 = np.float32(0) # porfolio 实际rtn 待求解
 
-    def _build_quad_curve(self):
+    def __build_quad_curve(self) -> None:
         # 组建不带不等式约束的经典mean-var二次曲线所需要参数
-        self.cov_mat_inv = np.linalg.inv(self.expct_cov_mat)
-        ones = np.ones_like(self.expct_rtn_rates)
-        self.c = ones @ self.cov_mat_inv @ ones
-        self.b = self.expct_rtn_rates @ self.cov_mat_inv @ self.expct_rtn_rates
-        self.a = ones @ self.cov_mat_inv @ self.expct_rtn_rates
-        self.d = self.b*self.c - self.a*self.a
+        '''
+        var = 1/norm_term * (qua_term * r^2 - 2 * lin_term * r + cons_term )
+        var = 1/d * (c * r^2 - 2 * a * r + b )
+        d = norm_term
+        c = qua_term
+        a = lin_term
+        b = cons_term
+        '''
+        self.__cov_mat_inv = np.linalg.inv(self.__expct_cov_mat)
+        ones = np.ones_like(self.__expct_rtn_rates)
+        self.__quad_term = ones @ self.__cov_mat_inv @ ones
+        self.__const_term = self.__expct_rtn_rates @ \
+                            self.__cov_mat_inv @ \
+                            self.__expct_rtn_rates
+        self.__lin_term = ones @ self.__cov_mat_inv @ self.__expct_rtn_rates
+        self.__norm_term = self.__const_term*self.__quad_term -\
+                            np.power(self.__lin_term, 2)
+        
         # var最小的return-var点是(var=1/c, r=a/c)
+        self.__vertex = (1.0/self.__quad_term,
+                         self.__lin_term/self.__quad_term)
+        
 
-    def _build_quad_program(self):
-        # 组建带不等式约束的二次规划所需要的参数（除了预期收益率参数b）
+    def __build_quad_program(self) -> None:
+        # 组建带不等式约束的二次规划所需要的参数(除了预期收益率参数b)
+        '''
+        Minimize obj = 1/2 * x @ P @ x + q @ x
+        subject to G @ x <= h, A @ x = b
+        '''
         ## P: 二次规划-目标函数中的正定矩阵
-        self._P = self.expct_cov_mat.astype(np.float64)
+        self.__P = self.__expct_cov_mat.astype(np.float64)
         ## q: 二次规划-目标函数中的一次项系数
-        self._q = np.zeros_like(self.expct_rtn_rates).astype(np.float64)
-        ## A: 二次规划-等式约束中的系数矩阵.有两个等式约束：1、以未定元为权重的加权预期收益率为goal_rtn_rate_portf，2、未定元相加之和为1
-        ## 第1个约束要等到goal_rtn_rate_portf加进来之后
-        self._A = np.stack( [self.expct_rtn_rates, np.ones_like(self.expct_rtn_rates)], axis=0).astype(np.float64)
+        self.__q = np.zeros_like(self.__expct_rtn_rates).astype(np.float64)
+        ## A: 二次规划-等式约束中的系数矩阵.有两个等式约束：1、以未定元为权重的加权预期收益率为goal_r，2、未定元相加之和为1
+        ## 第1个约束要等到goal_r加进来之后
+        self.__A = np.stack(
+                            [self.__expct_rtn_rates, np.ones_like(self.__expct_rtn_rates)],
+                             axis=0
+                             ).astype(np.float64)
         ## G: 二次规划-不等式约束中的系数矩阵. 有两个不等式约束：1、下限，2、上限
-        self._num_assets = len(self.expct_rtn_rates)
+        self.__num_assets = len(self.__expct_rtn_rates)
 
-        if self.low_constraints is not None and self.high_constraints is None: # 下限给定，上限未给时
-            self.high_constraints = np.ones_like(self.low_constraints) # 默认上限是小于等于1.0
-        elif self.low_constraints is None and self.high_constraints is not None: # 下限未给，上限给定时
-            self.low_constraints = np.zeros_like(self.high_constraints) # 默认下限是大于等于0.0
-        else: # 上下限都未给 或 上下限都已给出，不作处理
-            pass
-        if self.low_constraints is not None and self.high_constraints is not None:
-            self._G = np.concatenate([-np.eye(self._num_assets), np.eye(self._num_assets)], axis=0).astype(np.float64)
-            self._h = np.concatenate( [-self.low_constraints, self.high_constraints], axis=0).astype(np.float64)
+        if not self.__no_bounds:
+            self.__G = np.concatenate(
+                                      [-np.eye(self.__num_assets), np.eye(self.__num_assets)],
+                                      axis=0
+                                      ).astype(np.float64)
+            self.__h = np.concatenate(
+                                      [-self.__low_constraints, self.__high_constraints],
+                                      axis=0
+                                      ).astype(np.float64)
         else: # 上下限都未给时，默认为无不等式约束
-            self._G = None
-            self._h = None
+            self.__G = None
+            self.__h = None
+    
+    @property
+    def portf_rtn(self) -> np.float32:
+        if self.__portf_rtn != np.float32(0):
+            return self.__portf_rtn
+        else:
+            return self.__expct_rtn_rates @ self.__portf_w
+    
+    @property
+    def portf_var(self) -> np.float32:
+        if self.__portf_var != np.float32(-1):
+            return self.__portf_var
+        else:
+            return self.__portf_w @ self.__expct_cov_mat @ self.__portf_w
+
+    @property
+    def portf_w(self) -> np.ndarray:
+        if len(self.__portf_w) > 0:
+            return self.__portf_w
+        else:
+            raise NotImplementedError('portf_w not calculated')
+
+    @property
+    def solve_status(self) -> str:
+        if self.__solve_status != '':
+            return self.__solve_status
+        else:
+            raise NotImplementedError('solve status not obtained')
+
+    @staticmethod
+    def __cal_portf_w_unbounds_from_rtn(
+        goal_r: np.float32,
+        expct_rtn_rates: np.ndarray,
+        cov_mat_inv: np.ndarray,
+        norm_term: np.float32,
+        quad_term: np.float32,
+        lin_term: np.float32,
+        const_term: np.float32) -> np.ndarray:
+
+        ones = np.ones_like(expct_rtn_rates)
+        return goal_r * 1.0 / norm_term * cov_mat_inv @ ( quad_term * expct_rtn_rates - lin_term * ones ) \
+               + \
+               1.0 / norm_term * cov_mat_inv @ ( const_term * ones - lin_term * expct_rtn_rates )
+
+    @staticmethod
+    def __cal_portf_var_unbounds_from_rtn(
+        goal_r: np.float32,
+        norm_term: np.float32,
+        quad_term: np.float32,
+        lin_term: np.float32,
+        const_term: np.float32) -> np.float32:
+
+        return 1.0 / norm_term * \
+               (quad_term * np.power(goal_r, 2) - 2 * lin_term * goal_r + const_term)
+
+    @staticmethod
+    def __cal_portf_rtn_unbounds_from_var(
+        goal_var: np.float32,
+        norm_term: np.float32,
+        quad_term: np.float32,
+        lin_term: np.float32,
+        const_term: np.float32) -> np.float32:
+
+        return lin_term/quad_term + \
+               np.sqrt(
+                       norm_term/quad_term *\
+                       (goal_var + np.power(lin_term, 2)/(norm_term*quad_term) - const_term/norm_term)
+                       )
 
     # 不考虑不等式约束，根据给定的预期收益率r，直接得到 最优var和最优protf权重
-    def get_portf_var_from_r(self, r:np.float32):
-        if r < self.a/self.c:
+    def __get_portf_unbounds_from_rtn(
+            self,
+            goal_r:np.float32) -> None:
+        
+        if goal_r < self.__vertex[1]:
             raise ValueError(
-                f"Minimum expected return rate for current combination of assets is {self.a / self.c}"
+                f"Minimum expected return rate for current combination is {self.__vertex[1]}"
                 )
-        ones = np.ones_like(self.expct_rtn_rates)
-        weights_star = r * 1.0/self.d * self.cov_mat_inv @ ( self.c*self.expct_rtn_rates - self.a*ones ) + \
-                       1.0/self.d * self.cov_mat_inv @ ( self.b*ones - self.a*self.expct_rtn_rates )
-        var_star = 1.0 / self.d * (self.c*r*r - 2*self.a*r + self.b)
+        
+        self.__portf_w = self.__cal_portf_w_unbounds_from_rtn(
+            goal_r,
+            self.__expct_rtn_rates,
+            self.__cov_mat_inv,
+            self.__norm_term,
+            self.__quad_term,
+            self.__lin_term,
+            self.__const_term
+        )
+        
+        self.__portf_var = self.__cal_portf_var_unbounds_from_rtn(
+            goal_r,
+            self.__norm_term,
+            self.__quad_term,
+            self.__lin_term,
+            self.__const_term
+        )
+        
+        self.__portf_rtn = goal_r
 
-        return (var_star, weights_star)
+        self.__solve_status = "direct"
 
     # 不考虑不等式约束，根据给定的预期波动率var，直接得到 最优收益率r和最优protf权重
-    def get_portf_r_from_var(self, var:np.float32):
-        if var < 1.0/self.c:
+    def __get_portf_unbounds_from_var(
+            self,
+            goal_var:np.float32) -> None:
+        
+        if goal_var < self.__vertex[0]:
             raise ValueError(
-                f"Minimum expected variance for current combination of assets is {1.0 / self.c}"
+                f"Minimum expected variance for current combination is {self.__vertex[0]}"
                 )
-        r_star = self.a/self.c +\
-                 np.sqrt( self.d/self.c * ( var + self.a*self.a/(self.d*self.c) - self.b/self.d ) )
-        _, weights_star = self.get_portf_var_from_r(r_star)
-        return (r_star, weights_star)
+        
+        self.__portf_rtn = self.__cal_portf_rtn_unbounds_from_var(
+            goal_var,
+            self.__norm_term,
+            self.__quad_term,
+            self.__lin_term,
+            self.__const_term
+        )
+
+        self.__portf_w = self.__cal_portf_w_unbounds_from_rtn(
+            self.__portf_rtn,
+            self.__expct_rtn_rates,
+            self.__cov_mat_inv,
+            self.__norm_term,
+            self.__quad_term,
+            self.__lin_term,
+            self.__const_term
+        )
+
+        self.__portf_var = goal_var
+
+        self.__solve_status = "direct"
+
 
     # 考虑不等式约束，根据给定的预期收益率r(即满足至少要r的预期收益率)，求解portfolio波动最小的protf权重，以及此时的var
-    def solve_constrained_qp_from_r(self, goal_r:np.float32):
-        if goal_r < self.a/self.c:
+    def __get_portf_bounds_from_rtn(
+            self,
+            goal_r:np.float32) -> None:
+        
+        if goal_r < self.__vertex[1]:
             raise ValueError(
-                f"Minimum expected return rate for current combination of assets is {self.a / self.c}"
+                f"Minimum expected return rate for current combination is {self.__vertex[1]}"
                 )
-        self.goal_rtn_rate_portf = goal_r
-        self._b = np.array([self.goal_rtn_rate_portf, 1.0]).astype(np.float64)
-        qp_args = [self._P, self._q, self._G, self._h, self._A, self._b]
+        
+        self.__b = np.array([goal_r, 1.0]).astype(np.float64)
+        qp_args = [self.__P, self.__q, self.__G, self.__h, self.__A, self.__b]
         qp_args = [cvxopt.matrix(i) if i is not None else None for i in qp_args]
         qp_result = cvxopt.solvers.qp(*qp_args)
-        # 返回解出的portf权重，此时达到的最优（小）var, 此时达到的最优（大）r（可能比goal_r要大），求解status
-        return {"portf_w":np.array(qp_result['x']).squeeze(1),
-                "portf_var":2.0*qp_result['primal objective'],
-                "portf_rtn":(self.expct_rtn_rates @ np.array(qp_result['x'])).item(),
-                "qp_status":qp_result['status']
-                }
+
+        self.__portf_w = np.array(qp_result['x']).squeeze(1)
+
+        self.__portf_var = np.float32( 2.0 * qp_result['primal objective'] )
+
+        self.__portf_rtn = self.__expct_rtn_rates @ self.__portf_w
+
+        self.__solve_status = "qp_" + qp_result['status']
+
 
     # 考虑不等式约束，根据给定的预期波动var(即能承受的最低波动var)，求解portfolio预期收益最大的protf权重，以及此时的r
-    def solve_constrained_qp_from_var(self, goal_var:np.float32):
-        if goal_var < 1.0/self.c:
+    def __get_portf_bounds_from_var(
+            self,
+            goal_var:np.float32) -> None:
+        
+        if goal_var < self.__vertex[0]:
             raise ValueError(
-                f"Minimum expected variance for current combination of assets is {1.0 / self.c}"
+                f"Minimum expected variance for current combination is {self.__vertex[0]}"
                 )
-        self.goal_rtn_rate_portf = self.get_portf_r_from_var(goal_var)[0]
-        self._b = np.array([self.goal_rtn_rate_portf, 1.0]).astype(np.float64)
-        qp_args = [self._P, self._q, self._G, self._h, self._A, self._b]
+        
+        goal_r = self.__cal_portf_rtn_unbounds_from_var(
+            goal_var,
+            self.__norm_term,
+            self.__quad_term,
+            self.__lin_term,
+            self.__const_term
+            )
+
+        self.__b = np.array([goal_r, 1.0]).astype(np.float64)
+        qp_args = [self.__P, self.__q, self.__G, self.__h, self.__A, self.__b]
         qp_args = [cvxopt.matrix(i) if i is not None else None for i in qp_args]
         qp_result = cvxopt.solvers.qp(*qp_args)
-        # 返回解出的portf权重，此时达到的最优（小）var（可能比goal_var要大）, 此时达到的最优（大）r，求解status
-        return {"portf_w": np.array(qp_result['x']).squeeze(1),
-                "portf_var": 2.0 * qp_result['primal objective'],
-                "portf_rtn": (self.expct_rtn_rates @ np.array(qp_result['x'])).item(),
-                "qp_status": qp_result['status']
-                }
+
+        self.__portf_w = np.array(qp_result['x']).squeeze(1)
+
+        self.__portf_var = np.float32( 2.0 * qp_result['primal objective'] )
+
+        self.__portf_rtn = self.__expct_rtn_rates @ self.__portf_w
+
+        self.__solve_status = "qp_" + qp_result['status']
 
 
-
-
-
-
+    def __call__(
+            self,
+            tgt_value: np.float32,
+            mode: str) -> basicPortfSolveRes:
+        
+        # 计算模式
+        if mode not in ['minWave', 'maxReturn', 'sharp']:
+            raise ValueError(
+                f'wrong mode for mean-variance optimal with {mode}'
+                )
+        
+        # 按模式求解
+        if mode == 'minWave' and self.__no_bounds:
+            self.__get_portf_unbounds_from_rtn(tgt_value)
+        elif mode == 'minWave':
+            self.__get_portf_bounds_from_rtn(tgt_value)
+        elif mode == 'maxReturn' and self.__no_bounds:
+            self.__get_portf_unbounds_from_var(tgt_value)
+        elif mode == 'maxReturn':
+            self.__get_portf_bounds_from_var(tgt_value)
+        else:
+            raise NotImplementedError('mode sharp note implemented')
+        
+        return {
+            'portf_w': self.portf_w,
+            'portf_rtn': self.portf_rtn,
+            'portf_var': self.portf_var,
+            'solve_status': self.solve_status,
+            'assets_idlst': self.assets_idlst
+            }
 
 
 
@@ -200,12 +385,13 @@ if __name__ == "__main__":
 
     low_constraints = np.array([0.0]*num_assets)
     high_constraints = np.array([1.0] * num_assets)
-    constraints = [None, None]
+    constraints = [low_constraints, high_constraints]
+    # constraints = [None, None]
     # constraints = []
-    model = MeanVarOpt(expct_rtn_rate_vec, expct_cov_mat, *constraints)
+    model = MeanVarOpt(expct_rtn_rate_vec, expct_cov_mat, constraints, ['test']*num_assets)
     # print(model.get_portf_var_from_r(goal_r=0.020017337450874609))
     # result = model.solve_constrained_qp_from_r(goal_r=0.020017337450874608 )
-    result = model.get_portf_r_from_var(var=5.342786287220995)
+    result = model(5.342786287220995, 'maxReturn')
     print( result )
 
 
