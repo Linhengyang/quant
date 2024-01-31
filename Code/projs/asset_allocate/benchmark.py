@@ -13,8 +13,16 @@ sys.dont_write_bytecode = True
 
 
 
-class benchmarkBT:
-
+class benchmarkStrat:
+    '''
+    attributes:
+        1. assets_idlst
+        2. flag
+        3. portf_w_list
+    
+    methods:
+        1. backtest()  get backtest result
+    '''
     __slots__ = ("__assets_idlst", "__flag", "__portf_w_list")
 
 
