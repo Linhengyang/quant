@@ -2,12 +2,10 @@ from Code.projs.asset_allocate.dataLoad import(
     get_benchmark_rtn_data,
     _DB
     )
-from Code.BackTester.BT_AssetAllocate import(
-    rtn_multi_periods,
-    dltDecorBT
-    )
-
+from Code.BackTester.BT_AssetAllocate import BT_multi_periods
 from Code.projs.asset_allocate.inputParser import *
+from Code.Utils.Decorator import deDilate, addAnnual
+
 import numpy as np
 import typing as t
 import sys
@@ -77,18 +75,20 @@ class benchmarkBT:
     
 
 
-    @dltDecorBT(dilate, begindate, termidate)
+    @addAnnual('rtn', begindate, termidate)
+    @deDilate(dilate)
     def backtest(self) -> dict:
         '''
+        de-dilated
         'rtn': np.float32
-        'trade_days': int
+        'var': np.float32,
+        'trade_days': int,
         'total_cost': float,
         'gross_rtn': np.float32
         'annual_rtn': np.float32
         '''
-        return rtn_multi_periods(self.__portf_w_list,
-                                 self.__hold_rtn_mat_list
-                                 )
+        return BT_multi_periods(self.__portf_w_list,
+                                self.__hold_rtn_mat_list)
     
 
     @property
