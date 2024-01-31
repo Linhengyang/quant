@@ -2,9 +2,9 @@ from Code.projs.asset_allocate.dataLoad import(
     get_benchmark_rtn_data,
     _DB
     )
-from Code.BackTester.BT_AssetAllocate import BT_multi_periods
+from Code.BackTester.BT_AssetAllocate import basicBT_multiPeriods
 from Code.projs.asset_allocate.inputParser import *
-from Code.Utils.Decorator import deDilate, addAnnual
+from Code.Utils.Decorator import deDilate, addAnnual, addSTD
 
 import numpy as np
 import typing as t
@@ -54,15 +54,17 @@ class benchmarkBT:
 
     @addAnnual('rtn', begindate, termidate)
     @deDilate(dilate)
+    @addSTD('var')
     def backtest(self) -> dict:
         '''
         de-dilated
-        'rtn': np.float32
-        'var': np.float32,
-        'trade_days': int,
-        'total_cost': float,
-        'gross_rtn': np.float32
-        'annual_rtn': np.float32
+            'rtn': np.float32
+            'var': np.float32,
+            'std': np.float32
+            'trade_days': int,
+            'total_cost': float,
+            'gross_rtn': np.float32
+            'annual_rtn': np.float32
         '''
 
         assets_ids, tbl_names, rebal_gapday = self.parse_benchmark(benchmark)
@@ -87,8 +89,8 @@ class benchmarkBT:
 
         self.__portf_w_list = [np.array(weights), ] * self.__num_hold_periods
 
-        return BT_multi_periods(self.__portf_w_list,
-                                self.__hold_rtn_mat_list)
+        return basicBT_multiPeriods(self.__portf_w_list,
+                                    self.__hold_rtn_mat_list)
     
 
     @property
