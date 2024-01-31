@@ -1,8 +1,6 @@
 import numpy as np
-import functools
-from typing import Any, Callable
+from typing import Any
 import typing as t
-from datetime import datetime
 from functools import wraps
 from Code.Utils.Type import basicBackTestRes
 
@@ -63,10 +61,9 @@ def reallocate_cost(
         ) -> t.List:
     '''
                                      cost1                                          cost2
-    portf_w1  with invest_amount A  ------->  portf_w2 with invest_amount A(1+r1)  -------> portf_w3 with invest_amount A(1+r2)
-    
-     cost_clear
-    ------------>   0 asset with cash
+    portf_w1  with invest_amount A  ------->  portf_w2 with invest_amount A(1+r1) 
+                                                        cost_clear
+    -------> portf_w3 with invest_amount A(1+r2)       ------------>   0 asset with cash
     '''
     return [0]*len(portf_w_list)
 

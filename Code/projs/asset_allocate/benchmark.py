@@ -4,7 +4,11 @@ from Code.projs.asset_allocate.dataLoad import(
     )
 from Code.BackTester.BT_AssetAllocate import basicBT_multiPeriods
 from Code.projs.asset_allocate.runner import *
-from Code.Utils.Decorator import deDilate, addAnnual, addSTD
+from Code.Utils.Decorator import (
+    deDilate,
+    addAnnual,
+    addSTD
+    )
 
 import numpy as np
 import typing as t
@@ -23,6 +27,8 @@ class benchmarkStrat:
     methods:
         1. backtest()  get backtest result
     '''
+
+
     __slots__ = ("__assets_idlst", "__flag", "__portf_w_list")
 
 
@@ -101,6 +107,7 @@ class benchmarkStrat:
         self.__portf_w_list = [np.array(weights), ] * num_hold_periods
 
         return basicBT_multiPeriods(self.__portf_w_list, hold_rtn_mat_list)
+    
     
     @property
     def assets_idlst(self):

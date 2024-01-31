@@ -28,14 +28,16 @@ class MeanVarOpt:
         'solve_status': str
         'assets_idlst': list
     }
-    
     '''
+
+
     __slots__ = ("assets_idlst", "__low_constraints", "__high_constraints",
                  "__no_bounds", "__expct_rtn_rates", "__expct_cov_mat", 
                  "__solve_status", "__portf_w", "__portf_var", "__portf_rtn", 
                  "__cov_mat_inv", "__quad_term", "__const_term", "__lin_term", 
                  "__norm_term", "__vertex", "__num_assets",
                  "__P", "__q", "__A", "__G", "__h", "__b")
+
 
     def __init__(
             self,
@@ -66,6 +68,7 @@ class MeanVarOpt:
         self.__portf_w: np.ndarray = np.array([]) # portfolio 实际权重 待求解
         self.__portf_var: np.float32 = np.float32(-1) # porfolio 实际var 待求解
         self.__portf_rtn: np.float32 = np.float32(0) # porfolio 实际rtn 待求解
+
 
     def __build_quad_curve(self) -> None:
         # 组建不带不等式约束的经典mean-var二次曲线所需要参数
