@@ -78,7 +78,14 @@ class benchmarkBT:
 
 
     @dltDecorBT(dilate, begindate, termidate)
-    def backtest(self):
+    def backtest(self) -> dict:
+        '''
+        'rtn': np.float32
+        'trade_days': int
+        'total_cost': float,
+        'gross_rtn': np.float32
+        'annual_rtn': np.float32
+        '''
         return rtn_multi_periods(self.__portf_w_list,
                                  self.__hold_rtn_mat_list
                                  )
