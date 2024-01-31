@@ -3,7 +3,7 @@ from operator import itemgetter
 import functools
 import typing as t
 import numpy as np
-from flask import request, Blueprint
+from flask import request, Blueprint, Flask
 import warnings
 from markupsafe import escape
 from pprint import pprint
@@ -165,14 +165,9 @@ def parseAssets2dicts(
     
 
 
-def getAssetInfo_rls2glob(
-        inputs: Any
-        ) -> t.Tuple[
-            t.Dict[str, dict],
-            t.Dict[str, t.List[str]]
-            ]:
-    
-    assets_info_lst = inputs["assets_info"] # assets_info
+
+
+def release2global(inputs: Any) -> None:
 
     # 持仓起始日，持仓终结日，膨胀系数, 调仓周期, 基准代号, 回看窗口天数
     global begindate, termidate, dilate, gapday, benchmark, back_window_size
@@ -190,13 +185,10 @@ def getAssetInfo_rls2glob(
     print(f'release begindate {begindate}, termidate {termidate}, dilate {dilate},\
             gapday {gapday}, benchmark {benchmark}, back_window_size {back_window_size}\
             to global')
-    
+
     # 类型转换
     gapday, back_window_size, dilate = int(gapday), int(back_window_size), int(dilate)
 
-    assets_dict, src_tbl_dict = parseAssets2dicts(assets_info_lst)
-
-    return assets_dict, src_tbl_dict
 
 
 
@@ -223,6 +215,8 @@ def runner():
 
     inputs = request.json
 
+    release2global(inputs)
+
 
     mvopt_strat = meanarOptStrat(inputs)
     BT_mvopt = mvopt_strat.backtest()
@@ -237,4 +231,19 @@ def runner():
         'backtest': BT_mvopt,
         'benchmark': BT_bchmak
     }
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+
+    asset_allocate_app = Flask(app_name, static_folder=static_folder, template_folder=template_folder)
+    asset_allocate_app.register_blueprint(mvopt_api)
     
+    asset_allocate_app.run(port=8000, debug=True)
