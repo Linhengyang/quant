@@ -15,8 +15,7 @@ sys.dont_write_bytecode = True
 
 class benchmarkBT:
 
-    __slots__ = ("assets_idlst", "__bchmk", "__hold_rtn_mat_list",
-                 "__portf_w_list", "__num_assets", "__num_hold_periods")
+    __slots__ = ("__assets_idlst", "__flag", "__portf_w_list")
 
 
     _BENCHMARK_WEIGHTS = {
@@ -49,7 +48,11 @@ class benchmarkBT:
                  benchmark: str
                  ) -> None:
         
-        self.__bchmk = benchmark
+        self.__flag = benchmark
+        self.__assets_idlst = []
+        self.__portf_w_list = []
+
+    
 
 
     @addAnnual('rtn', begindate, termidate)
@@ -67,9 +70,9 @@ class benchmarkBT:
             'annual_rtn': np.float32
         '''
 
-        assets_ids, tbl_names, rebal_gapday = self.parse_benchmark(benchmark)
+        assets_ids, tbl_names, rebal_gapday = self.parse_benchmark(self.__flag)
 
-        self.__hold_rtn_mat_list, self.assets_idlst = get_benchmark_rtn_data(
+        hold_rtn_mat_list, self.__assets_idlst = get_benchmark_rtn_data(
             begindate,
             termidate,
             assets_ids,
@@ -78,24 +81,32 @@ class benchmarkBT:
             _DB,
             rebal_gapday)
         
-        weights = [ self._BENCHMARK_WEIGHTS[benchmark][asset] for asset in self.assets_idlst ]
+        weights = [ self._BENCHMARK_WEIGHTS[benchmark][asset] for asset in self.__assets_idlst ]
 
-        self.__num_assets = self.__hold_rtn_mat_list[0].shape[0]
+        num_assets = hold_rtn_mat_list[0].shape[0]
 
-        assert self.__num_assets == len(weights),\
+        assert num_assets == len(weights),\
             "hold_rtn_mat axis 0 length must match with weights"
 
-        self.__num_hold_periods = len(self.__hold_rtn_mat_list) # 持仓期数
+        num_hold_periods = len(hold_rtn_mat_list) # 持仓期数
 
-        self.__portf_w_list = [np.array(weights), ] * self.__num_hold_periods
+        self.__portf_w_list = [np.array(weights), ] * num_hold_periods
 
-        return basicBT_multiPeriods(self.__portf_w_list,
-                                    self.__hold_rtn_mat_list)
+        return basicBT_multiPeriods(self.__portf_w_list, hold_rtn_mat_list)
     
+    @property
+    def assets_idlst(self):
+        return self.__assets_idlst
+
+
+    @property
+    def portf_w_list(self):
+        return self.__portf_w_list
+
 
     @property
     def flag(self):
-        return self.__bchmk
+        return self.__flag
     
 
     @staticmethod
