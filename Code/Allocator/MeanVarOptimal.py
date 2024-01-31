@@ -25,6 +25,7 @@ class MeanVarOpt:
         'portf_rtn': np.float32
         'portf_var': np.float32
         'solve_status': str
+        'assets_idlst': list
     }
     
     '''
