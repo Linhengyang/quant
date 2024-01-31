@@ -1,11 +1,7 @@
 import numpy as np
 import traceback
 import typing as t
-from typing import Any, Callable
-from Code.Utils.Type import (
-    basicPortfSolveRes,
-    basicBackTestRes
-)
+from typing import Any
 from operator import itemgetter
 
 from Code.Allocator.MeanVarOptimal import MeanVarOpt
@@ -16,14 +12,12 @@ from Code.projs.asset_allocate.dataLoad import (
 from Code.BackTester.BT_AssetAllocate import (
     basicBT_multiPeriods
 )
-from Code.projs.asset_allocate.benchmark import benchmarkBT
 from Code.projs.asset_allocate.inputParser import *
 from Code.projs.asset_allocate.inputParser import (
-    getAssetInfo_rls2glob,
+    parseAssets2dicts,
     get_constraints
     )
 from Code.Utils.Decorator import deDilate, addAnnual, addSTD
-
 
 
 
@@ -130,8 +124,9 @@ class meanarOptStrat:
 
     def _get_meanvar_data_params(self) -> Any:
         
-        # global begindate, termidate, dilate, gapday, benchmark, back_window_size
-        assets_dict, src_tbl_dict = getAssetInfo_rls2glob(self.__inputs)
+        assets_info_lst = self.__inputs["assets_info"] # assets_info
+
+        assets_dict, src_tbl_dict = parseAssets2dicts(assets_info_lst)
 
         mvo_target, expt_tgt_value = \
             itemgetter("mvo_target", "expt_tgt_value")(self.__inputs)
