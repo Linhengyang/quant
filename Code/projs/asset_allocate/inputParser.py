@@ -23,7 +23,7 @@ class ConstraintsCheck:
         self.func = func
 
 
-    def __call__(self, *args, **kwargs) -> Callable:
+    def __call__(self, *args, **kwargs) -> Any:
         
         low_bounds, upper_bounds = self.func(*args, **kwargs)
 
@@ -44,7 +44,7 @@ class ConstraintsCheck:
             # assert all(upper_bounds <= 1.0), \
             #     "no leverage trading! upper bounds must <= 1"
     
-        return (low_bounds, upper_bounds)
+        return [low_bounds, upper_bounds]
 
 
 
@@ -54,9 +54,7 @@ def get_constraints(
         assets_idlst: list,
         def_l_b: float = -1000.0,
         def_u_b: float = 1000.0
-        ) -> t.Tuple[
-            t.Union[np.ndarray, None],
-            t.Union[np.ndarray, None]]:
+        ) -> t.List[t.Union[np.ndarray, None]]:
     '''
     input:
         1. assets_dict,  {'id': {'categ':, 'l_b', 'u_b'} }
@@ -87,11 +85,11 @@ def get_constraints(
     low_bounds = np.array(low_bounds)
     upper_bounds = np.array(upper_bounds)
 
-    if np.mean(low_bounds) <= -999.0 and np.mean(upper_bounds) >= 999.0:
+    if np.mean(low_bounds) <= -1000.0 and np.mean(upper_bounds) >= 1000.0:
         # 如果下限都是 -1000.0, 且上限都是1000.0，说明没有输入任何上下限
         low_bounds, upper_bounds = None, None
 
-    return (low_bounds, upper_bounds)
+    return [low_bounds, upper_bounds]
 
 
 
@@ -134,8 +132,6 @@ def parseAssets2dicts(
         if tbl not in src_tbl_dict:
             src_tbl_dict[tbl] = []
         src_tbl_dict[tbl].append( asset_id )
-
-        assets_dict['asset_id'] = {'categ':categ, 'l_b':l_b, 'u_b':u_b}
     
     return assets_dict, src_tbl_dict
     
