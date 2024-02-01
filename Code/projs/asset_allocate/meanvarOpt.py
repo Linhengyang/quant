@@ -19,7 +19,7 @@ from Code.projs.asset_allocate.inputParser import (
     get_constraints
     )
 from Code.Utils.Decorator import (
-    funcTagger,
+    tagFunc,
     deDilate,
     addAnnual,
     addSTD
@@ -56,8 +56,9 @@ class meanvarOptStrat:
         self.__flag = ''
         
 
+
     @addAnnual('rtn', begindate, termidate)
-    @funcTagger('dedilated')
+    @tagFunc('dedilated')
     @addSTD('var')
     def backtest(self) -> dict:
         '''

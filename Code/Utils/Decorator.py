@@ -5,7 +5,7 @@ from functools import wraps
 import numpy as np
 
 
-class funcTagger:
+class tagFunc:
     '''
     Tag a function with attribute {attr_name} as True
     '''
@@ -179,3 +179,86 @@ class addSharpe:
             return bt_res
         
         return wrapper
+    
+
+
+
+
+def serialize(result):
+    '''
+    An in-place function to serialize json-like input result with numpy objects
+    '''
+    if isinstance(result, dict):
+        for k in result.keys():
+            result[k] = serialize( result[k] )
+
+    elif isinstance(result, list):
+        for i in range(len(result)):
+            result[i] = serialize( result[i] )
+
+    else:
+        if isinstance(result, np.floating):
+            result = float(result)
+        elif isinstance(result, np.ndarray):
+            result = result.tolist()
+
+
+    return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    x = {
+        '1': {
+            '11': [np.array([1.0, 2.0]), np.array([1.0, 2.0])],
+            '12':  [np.array([1.0, 2.0]), np.array([1.0, 2.0])]
+        },
+        '2': {
+            '21': [np.array([1.0, 2.0]), np.array([1.0, 2.0])],
+            '22':  [np.array([1.0, 2.0]), np.array([1.0, 2.0])]
+        },
+        '3': {
+            '31': [np.array([1.0, 2.0]), np.array([1.0, 2.0])],
+            '32':  [np.array([1.0, 2.0]), np.array([1.0, 2.0])]
+        }
+    }
+
+    y = [
+        [{
+            "1":np.float32(32),
+            "2":np.float32(2)
+        },
+        {
+            "1":np.float32(32),
+            "2":np.float32(2)
+        }], 
+        [{
+            "1":np.float32(32),
+            "2":np.float32(2)
+        },
+        {
+            "1":np.float32(32),
+            "2":np.float32(2)
+        }]
+    ]
+    serialize(y)
+    print( y )
