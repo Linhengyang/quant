@@ -19,6 +19,7 @@ from Code.projs.asset_allocate.inputParser import (
     get_constraints
     )
 from Code.Utils.Decorator import (
+    funcTagger,
     deDilate,
     addAnnual,
     addSTD
@@ -56,6 +57,7 @@ class meanvarOptStrat:
         
 
     @addAnnual('rtn', begindate, termidate)
+    @funcTagger('dedilated')
     @addSTD('var')
     def backtest(self) -> dict:
         '''
@@ -94,8 +96,6 @@ class meanvarOptStrat:
                 self.__portf_w_list.append( self.__portf_w_list[-1] )
             
             self.__detail_solve_results.append(cur_res)
-
-
 
         # 在 basicBT_multiPeriods 中，由于涉及到复利累乘，所以需要考虑 1 + de-dilated rtn
         # 所以必须在这里传入 de-dilated hold_rtn_mat. 在这之后，BT的结果不需要de-dilate

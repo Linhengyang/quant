@@ -5,6 +5,7 @@ from Code.projs.asset_allocate.dataLoad import(
 from Code.BackTester.BT_AssetAllocate import basicBT_multiPeriods
 from Code.projs.asset_allocate.runner import *
 from Code.Utils.Decorator import (
+    funcTagger,
     addAnnual,
     addSTD
     )
@@ -68,6 +69,7 @@ class benchmarkStrat:
 
 
     @addAnnual('rtn', begindate, termidate)
+    @funcTagger('dedilated')
     @addSTD('var')
     def backtest(self) -> dict:
         '''

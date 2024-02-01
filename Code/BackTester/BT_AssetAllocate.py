@@ -4,6 +4,7 @@ import typing as t
 from Code.Utils.Type import basicBackTestRes
 
 
+
 def rtn_period(
         portf_w: np.ndarray,
         period_rtn_mat: np.ndarray
@@ -16,6 +17,8 @@ def rtn_period(
     rtn_array = np.prod((1 + period_rtn_mat), axis=1) - 1
 
     return (portf_w @ rtn_array)
+
+
 
 
 def day_portfw_on_period(
@@ -65,6 +68,11 @@ def reallocate_cost(
     -------> portf_w3 with invest_amount A(1+r2)       ------------>   0 asset with cash
     '''
     return [0]*len(portf_w_list)
+
+
+
+
+
 
 
 
