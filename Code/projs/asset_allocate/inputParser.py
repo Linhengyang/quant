@@ -136,6 +136,40 @@ def parseAssets2dicts(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     assets_dict = {
         '00001': {

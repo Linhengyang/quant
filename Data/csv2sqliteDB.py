@@ -40,6 +40,7 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True, encoding='ut
     '''
     con = sqlite3.connect(db_path)
     cur = con.cursor()
+
     if isinstance(headers, list):
         assert len(dtypes) == len(headers), 'headers and datatypes must match in length'
     # 确认header
@@ -51,6 +52,7 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True, encoding='ut
         headers = colnames
     else:
         raise ValueError('headers shall be True if first line is the header or be a list of column names')
+    
     # create table
     cur.execute('''CREATE TABLE {tbl_name} ('''.format(tbl_name=tbl_name) + 
     ','.join([header + ' ' + dtype + '\n' for header, dtype in zip(headers, dtypes)]) + 
@@ -64,11 +66,21 @@ def csv2sqliteDB(csv_path, db_path, tbl_name, dtypes, headers=True, encoding='ut
             row_numb += 1
             cur.execute('''INSERT INTO {tbl_name} '''.format(tbl_name=tbl_name) + '(' + 
                         ','.join(headers) + ')' + ' values ' + '(' + ','.join(['?']*len(row)) + ')', row)
+    
     con.commit()
     con.close()
-    print('{row_numb} rows of table {tbl_name} in {db_path} written successfully from {csv_path}'\
-          .format(row_numb=row_numb, tbl_name=tbl_name, db_path=db_path, csv_path=csv_path))
+
+    print(
+        f'{row_numb} rows of table {tbl_name} in {db_path} written successfully from {csv_path}'
+        )
     
+
+
+
+
+
+
+
 
 
 
