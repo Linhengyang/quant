@@ -5,7 +5,6 @@ from Code.projs.asset_allocate.dataLoad import(
 from Code.BackTester.BT_AssetAllocate import basicBT_multiPeriods
 from Code.projs.asset_allocate.runner import *
 from Code.Utils.Decorator import (
-    deDilate,
     addAnnual,
     addSTD
     )
@@ -27,7 +26,6 @@ class benchmarkStrat:
     methods:
         1. backtest()  get backtest result
     '''
-
 
     __slots__ = ("__assets_idlst", "__flag", "__portf_w_list")
 
@@ -70,7 +68,6 @@ class benchmarkStrat:
 
 
     @addAnnual('rtn', begindate, termidate)
-    @deDilate(dilate)
     @addSTD('var')
     def backtest(self) -> dict:
         '''
@@ -91,7 +88,7 @@ class benchmarkStrat:
             termidate,
             assets_ids,
             tbl_names,
-            dilate,
+            1,
             _DB,
             rebal_gapday)
         
