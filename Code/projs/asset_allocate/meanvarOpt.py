@@ -7,17 +7,22 @@ from operator import itemgetter
 from Code.Allocator.MeanVarOptimal import MeanVarOpt
 from Code.projs.asset_allocate.dataLoad import (
     get_train_hold_rtn_data, 
-    _DB
-)
+    _DB,
+    _MKT_DATE_TABLE
+    )
 from Code.BackTester.BT_AssetAllocate import (
     basicBT_multiPeriods
-)
+    )
 from Code.projs.asset_allocate.runner import *
 from Code.projs.asset_allocate.inputParser import (
     parseAssets2dicts,
     get_constraints
     )
-from Code.Utils.Decorator import deDilate, addAnnual, addSTD
+from Code.Utils.Decorator import (
+    deDilate,
+    addAnnual,
+    addSTD
+    )
 
 
 
@@ -33,7 +38,11 @@ class meanvarOptStrat:
     methods:
         1. backtest()  get backtest result
     '''
+
+
     __slots__ = ("__inputs", "__assets_idlst", "__flag",  "__portf_w_list", "__detail_solve_results")
+
+
 
     def __init__(self,
                  inputs: Any
@@ -158,7 +167,8 @@ class meanvarOptStrat:
                 dilate,
                 assets_ids,
                 tbl_names,
-                _DB
+                _DB,
+                _MKT_DATE_TABLE
             )
         
         constraints = get_constraints( assets_dict, assets_idlst )

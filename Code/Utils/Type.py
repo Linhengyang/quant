@@ -5,8 +5,9 @@ import numpy as np
 
 
 
+
 class basicPortfSolveRes(TypedDict):
-    portf_w: np.array
+    portf_w: np.ndarray
     portf_rtn: np.float32
     portf_var: np.float32
     solve_status: str
