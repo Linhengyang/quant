@@ -5,7 +5,8 @@ import typing as t
 
 
 __all__ = (
-    "_DB"
+    "_DB",
+    "_MKT_DATE_TABLE"
 )
 
 
@@ -24,7 +25,7 @@ _LOCAL_DB = {
 
 
 _DB = _LOCAL_DB
-
+_MKT_DATE_TABLE = "dim_trade_date_ashare"
 
 
 def db_rtn_data(
@@ -104,9 +105,12 @@ def db_date_data(
         startdate: str,
         enddate: str,
         db_info: dict,
-        tbl_name: str = 'dim_trade_date_ashare',
+        tbl_name: str,
         ) -> np.ndarray:
-    # get trade dates for assets from startdate to enddate
+    '''
+    get recorded dates from startdate to enddate 
+    in table tbl_name from database db_info
+    '''
     db = DatabaseConnection(db_info)
 
     startdate, enddate = int(startdate), int(enddate)
@@ -142,7 +146,8 @@ def get_train_hold_rtn_data(
         dilate: int,
         assets_ids: t.Union[t.List[str], t.List[list]],
         tbl_names: t.Union[str, t.List[str]],
-        db_info: dict
+        db_info: dict,
+        mkt_date_tbl: str
         ) -> t.Tuple[t.List[np.ndarray], t.List[np.ndarray], list]:
     '''
     assets_ids & tbl_names:
@@ -161,7 +166,9 @@ def get_train_hold_rtn_data(
     # 取出2000-01-01至终止日, 所有的交易日期，已排序
     all_mkt_dates = db_date_data('20000101',
                                  termidate,
-                                 db_info) # 返回numpy of int
+                                 db_info,
+                                 mkt_date_tbl
+                                 ) # 返回numpy of int
     # 涉及到的最早的date，是begindate往前数 back_window_size 个交易日的日期。
     # 因为begindate当日早上完成调仓，需要前一天至前back_window_size天
     

@@ -7,7 +7,8 @@ from operator import itemgetter
 from Code.Allocator.MeanVarOptimal import MeanVarOpt
 from Code.projs.asset_allocate.dataLoad import (
     get_train_hold_rtn_data, 
-    _DB
+    _DB,
+    _MKT_DATE_TABLE
     )
 from Code.BackTester.BT_AssetAllocate import (
     basicBT_multiPeriods
@@ -166,7 +167,8 @@ class meanvarOptStrat:
                 dilate,
                 assets_ids,
                 tbl_names,
-                _DB
+                _DB,
+                _MKT_DATE_TABLE
             )
         
         constraints = get_constraints( assets_dict, assets_idlst )
