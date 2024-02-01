@@ -23,7 +23,8 @@ def rtn_period(
 
 def day_portfw_on_period(
         init_portf_w: np.ndarray,
-        day_rtn_on_period: np.ndarray) -> np.ndarray:
+        day_rtn_on_period: np.ndarray
+        ) -> np.ndarray:
     
     '''
     return:
@@ -48,7 +49,8 @@ def day_portfw_on_period(
 
         hadmud = day_porftw_mat[:, i-1] * day_rtn_on_period[:, i-1]
 
-        day_porftw_mat[:, i] = ( day_porftw_mat[:, i-1] + hadmud ) / (1 + sum(hadmud))
+        day_porftw_mat[:, i] = ( day_porftw_mat[:, i-1] + hadmud )/ \
+                                    (1 + sum(hadmud))
 
     return day_porftw_mat
 
@@ -57,15 +59,16 @@ def day_portfw_on_period(
 
 
 def reallocate_cost(
-        portf_w_list: list,
-        period_rtn_mat_list: list,
+        portf_w_list: t.List[np.ndarray],
+        hold_rtn_mat_list: t.List[np.ndarray],
         invest_amount: float
         ) -> t.List:
+    # TODO
     '''
-                                     cost1                                          cost2
+                                     cost1                                        
     portf_w1  with invest_amount A  ------->  portf_w2 with invest_amount A(1+r1) 
-                                                        cost_clear
-    -------> portf_w3 with invest_amount A(1+r2)       ------------>   0 asset with cash
+    cost2                                            cost_clear
+    -------> portf_w3 with invest_amount A(1+r2)   ------------>   0 asset with cash
     '''
     return [0]*len(portf_w_list)
 
@@ -78,11 +81,15 @@ def reallocate_cost(
 
 def basicBT_multiPeriods(
         portf_w_list: t.List[np.ndarray],
-        period_rtn_mat_list: t.List[np.ndarray],
-        trade_cost_list: t.List[np.float32] = [], 
+        hold_rtn_mat_list: t.List[np.ndarray],
+        trade_cost: Any = None, 
         invest_amount: t.Union[bool, float] = False
         ) -> basicBackTestRes:
     '''
+    return rates are meaningless after invest amount goes negative
+    basicBT_multiPeriods assumes no further reaction after invest
+    amount goes non-positive, and the BackTest stops.
+
     intput:
         portf_w_list: list of weight array
         period_rtn_mat_list: list of ndarray
@@ -96,30 +103,46 @@ def basicBT_multiPeriods(
     }
     '''
 
-    assert len(portf_w_list) == len(period_rtn_mat_list),\
-        f'portfolio weight allocations {len(portf_w_list)} not match actual rtn\
-          matrix records {len(period_rtn_mat_list)}'
-    
-    day_rtn_lst, trade_days = [], 0
+    if not invest_amount:
+        invest_amount = 10000.0
 
-    for portf_w, period_rtn_mat in zip(portf_w_list, period_rtn_mat_list):
+    assert len(portf_w_list) == len(hold_rtn_mat_list),\
+        f'number of periods of portfolio weights {len(portf_w_list)} \
+          not match with actual rtn matrix records {len(hold_rtn_mat_list)}'
+    
+    day_rtn_lst, cost_lst = [], []
+
+    for portf_w, period_rtn_mat in zip(portf_w_list, hold_rtn_mat_list):
 
         porftw_mat = day_portfw_on_period(portf_w, period_rtn_mat)
 
         portf_rtn_arr = (porftw_mat * period_rtn_mat).sum(axis=0)
 
-        day_rtn_lst.extend( list(portf_rtn_arr) )
+        # 第一个 小于等于 -1.0 的 portf_rtn, 亏掉所有deposit, 无论前面还剩多少
+        # 所以整个回测停止于此
 
-    portf_rtn_arr = np.array( day_rtn_lst )
+        # np.where returns a tuple of coords
+        check_ = np.where(portf_rtn_arr <= -1.0)[0]
 
-    if not invest_amount:
-        invest_amount = 10000
-    
-    total_cost = sum(trade_cost_list)
+        if check_.__len__() > 0: # if -1 rtn happens
+            stop_ind = check_[0] # backtest stops here
+            portf_rtn_arr = portf_rtn_arr[:stop_ind+1]
+            day_rtn_lst.extend( list(portf_rtn_arr) )
+            cost_lst.append(0)
+
+            break
+        else: # if -1 rtn not happens
+            day_rtn_lst.extend( list(portf_rtn_arr) )
+            cost_lst.append(0)
+
+    portf_rtn_arr = np.array(day_rtn_lst)
+    trade_days = len(day_rtn_lst)
+    total_cost = sum(cost_lst)
     gross_rtn = np.prod(1+portf_rtn_arr) - 1
 
     res = {
-        'rtn': ( invest_amount * gross_rtn - total_cost ) / invest_amount,
+        'rtn': ( invest_amount * gross_rtn - total_cost )/ \
+                            invest_amount,
         'var': np.var(portf_rtn_arr),
         'trade_days': trade_days,
         'total_cost': total_cost,

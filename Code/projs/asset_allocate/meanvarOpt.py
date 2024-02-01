@@ -98,13 +98,11 @@ class meanvarOptStrat:
             
             self.__detail_solve_results.append(cur_res)
 
-        # 在 basicBT_multiPeriods 中，由于涉及到复利累乘，所以需要考虑 1 + de-dilated rtn
+        # 在 basicBT_multiPeriods 中，由于涉及到复利累乘，所以需要考虑 1+de-dilated rtn
         # 所以必须在这里传入 de-dilated hold_rtn_mat. 在这之后，BT的结果不需要de-dilate
         hold_rtn_mat_list = [ hold_rtn_mat/dilate for hold_rtn_mat in hold_rtn_mat_list ]
 
-        BT_mvopt = basicBT_multiPeriods(self.__portf_w_list[1:], hold_rtn_mat_list)
-        
-        return BT_mvopt
+        return basicBT_multiPeriods(self.__portf_w_list[1:], hold_rtn_mat_list)
 
 
 
