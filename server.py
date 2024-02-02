@@ -1,6 +1,7 @@
 from flask import Flask
 import warnings
 import sys
+import numpy as np
 sys.dont_write_bytecode = True
 
 
@@ -36,4 +37,5 @@ asset_allocate_app.register_blueprint(mvopt_api)
 
 
 if __name__ == "__main__":
+    np.random.seed(100)
     asset_allocate_app.run(port=8000, debug=True)

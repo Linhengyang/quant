@@ -63,13 +63,13 @@ class meanvarOptStrat:
     def backtest(self) -> dict:
         '''
         de-dilated
-            'rtn': np.float32
-            'var': np.float32,
-            'std': np.float32
+            'rtn': np.floating
+            'var': np.floating,
+            'std': np.floating
             'trade_days': int,
             'total_cost': float,
-            'gross_rtn': np.float32
-            'annual_rtn': np.float32
+            'gross_rtn': np.floating
+            'annual_rtn': np.floating
         '''
 
         train_rtn_mat_list, hold_rtn_mat_list, self.__assets_idlst, constraints, self.__flag,\
@@ -190,7 +190,7 @@ class meanvarOptStrat:
         assets_idlst: t.List[str],
         constraints: t.List[t.Union[np.ndarray, None]],
         mvo_target: str,
-        expt_tgt_value: np.float32,
+        expt_tgt_value: np.floating,
         ) -> Any:
         '''
         input:
@@ -198,13 +198,13 @@ class meanvarOptStrat:
             assets_idlst: t.List[str],
             constraints: t.List[t.Union[np.ndarray, None]],
             mvo_target: str,
-            expt_tgt_value: np.float32,
+            expt_tgt_value: np.floating,
         return:
         de-dilate
             portf_w: np.ndarray
-            portf_rtn: np.float32
-            portf_var: np.float32
-            portf_std: np.float32
+            portf_rtn: np.floating
+            portf_var: np.floating
+            portf_std: np.floating
             solve_status: str
             assets_idlst: list
         '''

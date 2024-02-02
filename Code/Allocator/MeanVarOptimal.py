@@ -23,8 +23,8 @@ class MeanVarOpt:
     basicPortfSolveRes
     {
         'portf_w': np.ndarray
-        'portf_rtn': np.float32
-        'portf_var': np.float32
+        'portf_rtn': np.floating
+        'portf_var': np.floating
         'solve_status': str
         'assets_idlst': list
     }
@@ -66,8 +66,8 @@ class MeanVarOpt:
         self.__solve_status: str = "" # 求解状态
 
         self.__portf_w: np.ndarray = np.array([]) # portfolio 实际权重 待求解
-        self.__portf_var: np.float32 = np.float32(-1) # porfolio 实际var 待求解
-        self.__portf_rtn: np.float32 = np.float32(0) # porfolio 实际rtn 待求解
+        self.__portf_var: np.floating = np.float32(-1) # porfolio 实际var 待求解
+        self.__portf_rtn: np.floating = np.float32(0) # porfolio 实际rtn 待求解
 
 
     def __build_quad_curve(self) -> None:
@@ -128,14 +128,14 @@ class MeanVarOpt:
             self.__h = None
     
     @property
-    def portf_rtn(self) -> np.float32:
+    def portf_rtn(self) -> np.floating:
         if self.__portf_rtn != np.float32(0):
             return self.__portf_rtn
         else:
             return self.__expct_rtn_rates @ self.__portf_w
     
     @property
-    def portf_var(self) -> np.float32:
+    def portf_var(self) -> np.floating:
         if self.__portf_var != np.float32(-1):
             return self.__portf_var
         else:
@@ -157,13 +157,13 @@ class MeanVarOpt:
 
     @staticmethod
     def __cal_portf_w_unbounds_from_rtn(
-        goal_r: np.float32,
+        goal_r: np.floating,
         expct_rtn_rates: np.ndarray,
         cov_mat_inv: np.ndarray,
-        norm_term: np.float32,
-        quad_term: np.float32,
-        lin_term: np.float32,
-        const_term: np.float32) -> np.ndarray:
+        norm_term: np.floating,
+        quad_term: np.floating,
+        lin_term: np.floating,
+        const_term: np.floating) -> np.ndarray:
 
         ones = np.ones_like(expct_rtn_rates)
         return goal_r * 1.0 / norm_term * cov_mat_inv @ ( quad_term * expct_rtn_rates - lin_term * ones ) \
@@ -172,22 +172,22 @@ class MeanVarOpt:
 
     @staticmethod
     def __cal_portf_var_unbounds_from_rtn(
-        goal_r: np.float32,
-        norm_term: np.float32,
-        quad_term: np.float32,
-        lin_term: np.float32,
-        const_term: np.float32) -> np.float32:
+        goal_r: np.floating,
+        norm_term: np.floating,
+        quad_term: np.floating,
+        lin_term: np.floating,
+        const_term: np.floating) -> np.floating:
 
         return 1.0 / norm_term * \
                (quad_term * np.power(goal_r, 2) - 2 * lin_term * goal_r + const_term)
 
     @staticmethod
     def __cal_portf_rtn_unbounds_from_var(
-        goal_var: np.float32,
-        norm_term: np.float32,
-        quad_term: np.float32,
-        lin_term: np.float32,
-        const_term: np.float32) -> np.float32:
+        goal_var: np.floating,
+        norm_term: np.floating,
+        quad_term: np.floating,
+        lin_term: np.floating,
+        const_term: np.floating) -> np.floating:
 
         return lin_term/quad_term + \
                np.sqrt(
@@ -198,11 +198,12 @@ class MeanVarOpt:
     # 不考虑不等式约束，根据给定的预期收益率r，直接得到 最优var和最优protf权重
     def __get_portf_unbounds_from_rtn(
             self,
-            goal_r:np.float32) -> None:
+            goal_r:np.floating) -> None:
         
         if goal_r < self.__vertex[1]:
             raise ValueError(
-                f"Minimum expected return rate for current combination is {self.__vertex[1]}"
+                f"Minimum expected target return value(after dilate) "
+                f"for current combination is {self.__vertex[1]}"
                 )
         
         self.__portf_w = self.__cal_portf_w_unbounds_from_rtn(
@@ -230,11 +231,12 @@ class MeanVarOpt:
     # 不考虑不等式约束，根据给定的预期波动率var，直接得到 最优收益率r和最优protf权重
     def __get_portf_unbounds_from_var(
             self,
-            goal_var:np.float32) -> None:
+            goal_var:np.floating) -> None:
         
         if goal_var < self.__vertex[0]:
             raise ValueError(
-                f"Minimum expected variance for current combination is {self.__vertex[0]}"
+                f'Minimum expected target variance value(after dilate) for'
+                f' current combination is {self.__vertex[0]}'
                 )
         
         self.__portf_rtn = self.__cal_portf_rtn_unbounds_from_var(
@@ -263,11 +265,12 @@ class MeanVarOpt:
     # 考虑不等式约束，根据给定的预期收益率r(即满足至少要r的预期收益率)，求解portfolio波动最小的protf权重，以及此时的var
     def __get_portf_bounds_from_rtn(
             self,
-            goal_r:np.float32) -> None:
+            goal_r:np.floating) -> None:
         
         if goal_r < self.__vertex[1]:
             raise ValueError(
-                f"Minimum expected return rate for current combination is {self.__vertex[1]}"
+                f"Minimum expected target return value(after dilate) "
+                f"for current combination is {self.__vertex[1]}"
                 )
         
         self.__b = np.array([goal_r, 1.0]).astype(np.float64)
@@ -287,11 +290,12 @@ class MeanVarOpt:
     # 考虑不等式约束，根据给定的预期波动var(即能承受的最低波动var)，求解portfolio预期收益最大的protf权重，以及此时的r
     def __get_portf_bounds_from_var(
             self,
-            goal_var:np.float32) -> None:
+            goal_var:np.floating) -> None:
         
         if goal_var < self.__vertex[0]:
             raise ValueError(
-                f"Minimum expected variance for current combination is {self.__vertex[0]}"
+                f"Minimum expected target variance value(after dilate) "
+                f"for current combination is {self.__vertex[0]}"
                 )
         
         goal_r = self.__cal_portf_rtn_unbounds_from_var(
@@ -318,7 +322,7 @@ class MeanVarOpt:
 
     def __call__(
             self,
-            tgt_value: np.float32,
+            tgt_value: np.floating,
             mode: str) -> basicPortfSolveRes:
         
         # 计算模式
