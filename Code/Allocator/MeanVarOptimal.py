@@ -166,9 +166,17 @@ class MeanVarOpt:
         const_term: np.floating) -> np.ndarray:
 
         ones = np.ones_like(expct_rtn_rates)
-        return goal_r * 1.0 / norm_term * cov_mat_inv @ ( quad_term * expct_rtn_rates - lin_term * ones ) \
-               + \
-               1.0 / norm_term * cov_mat_inv @ ( const_term * ones - lin_term * expct_rtn_rates )
+        portf_w =  \
+            goal_r * 1.0 / norm_term * cov_mat_inv @ ( quad_term * expct_rtn_rates - lin_term * ones ) \
+            + \
+            1.0 / norm_term * cov_mat_inv @ ( const_term * ones - lin_term * expct_rtn_rates )
+        
+        assert not np.isnan(portf_w).any(),\
+            f'NaN calculation on __cal_portf_w_unbounds_from_rtn, '\
+            f'with goal_r {goal_r}, expct_rtn_rates {expct_rtn_rates}, cov_mat_inv {cov_mat_inv}, '\
+            f'norm_term {norm_term}, quad_term {quad_term}, lin_term {lin_term}, const_term {const_term}'
+        
+        return portf_w
 
     @staticmethod
     def __cal_portf_var_unbounds_from_rtn(
@@ -178,8 +186,15 @@ class MeanVarOpt:
         lin_term: np.floating,
         const_term: np.floating) -> np.floating:
 
-        return 1.0 / norm_term * \
-               (quad_term * np.power(goal_r, 2) - 2 * lin_term * goal_r + const_term)
+        portf_var = 1.0 / norm_term * \
+            (quad_term * np.power(goal_r, 2) - 2 * lin_term * goal_r + const_term)
+        
+        assert not np.isnan(portf_var),\
+            f'NaN calculation on __cal_portf_var_unbounds_from_rtn '\
+            f'with goal_r {goal_r}, norm_term {norm_term}, quad_term {quad_term}, '\
+            f'lin_term {lin_term}, const_term {const_term}'
+        
+        return portf_var
 
     @staticmethod
     def __cal_portf_rtn_unbounds_from_var(
@@ -189,11 +204,18 @@ class MeanVarOpt:
         lin_term: np.floating,
         const_term: np.floating) -> np.floating:
 
-        return lin_term/quad_term + \
-               np.sqrt(
-                       norm_term/quad_term *\
-                       (goal_var + np.power(lin_term, 2)/(norm_term*quad_term) - const_term/norm_term)
-                       )
+        porft_rtn = lin_term/quad_term + \
+            np.sqrt(
+                norm_term/quad_term *\
+                (goal_var + np.power(lin_term, 2)/(norm_term*quad_term) - const_term/norm_term)
+                )
+        
+        assert not np.isnan(porft_rtn),\
+            f'NaN calculation on __cal_portf_rtn_unbounds_from_var '\
+            f'with goal_var {goal_var}, norm_term {norm_term}, quad_term {quad_term}, '\
+            f'lin_term {lin_term}, const_term {const_term}'
+        
+        return porft_rtn
 
     # 不考虑不等式约束，根据给定的预期收益率r，直接得到 最优var和最优protf权重
     def __get_portf_unbounds_from_rtn(
@@ -203,7 +225,7 @@ class MeanVarOpt:
         if goal_r < self.__vertex[1]:
             raise ValueError(
                 f"Minimum expected target return value(after dilate) "
-                f"for current combination is {self.__vertex[1]}"
+                f"for current combination is {self.__vertex[1]}. Please raise rtn"
                 )
         
         self.__portf_w = self.__cal_portf_w_unbounds_from_rtn(
@@ -236,7 +258,7 @@ class MeanVarOpt:
         if goal_var < self.__vertex[0]:
             raise ValueError(
                 f'Minimum expected target variance value(after dilate) for'
-                f' current combination is {self.__vertex[0]}'
+                f' current combination is {self.__vertex[0]}. Please raise variance'
                 )
         
         self.__portf_rtn = self.__cal_portf_rtn_unbounds_from_var(
@@ -270,7 +292,7 @@ class MeanVarOpt:
         if goal_r < self.__vertex[1]:
             raise ValueError(
                 f"Minimum expected target return value(after dilate) "
-                f"for current combination is {self.__vertex[1]}"
+                f"for current combination is {self.__vertex[1]}. Please raise rtn"
                 )
         
         self.__b = np.array([goal_r, 1.0]).astype(np.float64)
@@ -295,7 +317,7 @@ class MeanVarOpt:
         if goal_var < self.__vertex[0]:
             raise ValueError(
                 f"Minimum expected target variance value(after dilate) "
-                f"for current combination is {self.__vertex[0]}"
+                f"for current combination is {self.__vertex[0]}. Please raise variance"
                 )
         
         goal_r = self.__cal_portf_rtn_unbounds_from_var(
