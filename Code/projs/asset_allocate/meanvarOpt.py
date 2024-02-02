@@ -208,9 +208,10 @@ class meanvarOptStrat:
             solve_status: str
             assets_idlst: list
         '''
+
         cov_mat = np.cov(train_rtn_mat)
         rtn_rates = train_rtn_mat.mean(axis=1)
-
+        
         try:
             fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
             
@@ -229,6 +230,9 @@ class meanvarOptStrat:
         
         return res
     
+
+
+
 
 
     def detail_window(self, position_no: int):
