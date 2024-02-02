@@ -15,7 +15,9 @@ import numpy as np
 import cvxopt
 import typing as t
 from Code.Utils.Type import basicPortfSolveRes
-
+from Code.Utils.Statistic import (
+    multiCoLinear
+    )
 ## 均值-方差最优化求解器
 class MeanVarOpt:
     '''
@@ -57,6 +59,12 @@ class MeanVarOpt:
         assert len(expct_rtn_rates) == expct_cov_mat.shape[0],\
             "Assets number conflicts between returns & covariance"
         
+        # 检查条件1: 共线性检查
+        colinear = multiCoLinear(expct_cov_mat, assets_idlst)
+        assert len(colinear) == 0, \
+            f'Co-Linearity found with assets {str(colinear)}'
+
+
         self.__expct_rtn_rates: np.ndarray = expct_rtn_rates
         self.__expct_cov_mat: np.ndarray = expct_cov_mat
 
@@ -80,6 +88,7 @@ class MeanVarOpt:
         a = lin_term
         b = cons_term
         '''
+
         self.__cov_mat_inv = np.linalg.inv(self.__expct_cov_mat)
         ones = np.ones_like(self.__expct_rtn_rates)
         self.__quad_term = ones @ self.__cov_mat_inv @ ones
@@ -172,9 +181,7 @@ class MeanVarOpt:
             1.0 / norm_term * cov_mat_inv @ ( const_term * ones - lin_term * expct_rtn_rates )
         
         assert not np.isnan(portf_w).any(),\
-            f'NaN calculation on __cal_portf_w_unbounds_from_rtn, '\
-            f'with goal_r {goal_r}, expct_rtn_rates {expct_rtn_rates}, cov_mat_inv {cov_mat_inv}, '\
-            f'norm_term {norm_term}, quad_term {quad_term}, lin_term {lin_term}, const_term {const_term}'
+            f'NaN calculation on __cal_portf_w_unbounds_from_rtn'
         
         return portf_w
 
@@ -190,9 +197,7 @@ class MeanVarOpt:
             (quad_term * np.power(goal_r, 2) - 2 * lin_term * goal_r + const_term)
         
         assert not np.isnan(portf_var),\
-            f'NaN calculation on __cal_portf_var_unbounds_from_rtn '\
-            f'with goal_r {goal_r}, norm_term {norm_term}, quad_term {quad_term}, '\
-            f'lin_term {lin_term}, const_term {const_term}'
+            f'NaN calculation on __cal_portf_var_unbounds_from_rtn'
         
         return portf_var
 
@@ -211,9 +216,7 @@ class MeanVarOpt:
                 )
         
         assert not np.isnan(porft_rtn),\
-            f'NaN calculation on __cal_portf_rtn_unbounds_from_var '\
-            f'with goal_var {goal_var}, norm_term {norm_term}, quad_term {quad_term}, '\
-            f'lin_term {lin_term}, const_term {const_term}'
+            f'NaN calculation on __cal_portf_rtn_unbounds_from_var'
         
         return porft_rtn
 
@@ -224,8 +227,8 @@ class MeanVarOpt:
         
         if goal_r < self.__vertex[1]:
             raise ValueError(
-                f"Minimum expected target return value(after dilate) "
-                f"for current combination is {self.__vertex[1]}. Please raise rtn"
+                f"minimum expected target return value(after dilate) for "
+                f"this process is {round(self.__vertex[1],3)}. Raise goal return"
                 )
         
         self.__portf_w = self.__cal_portf_w_unbounds_from_rtn(
@@ -257,8 +260,8 @@ class MeanVarOpt:
         
         if goal_var < self.__vertex[0]:
             raise ValueError(
-                f'Minimum expected target variance value(after dilate) for'
-                f' current combination is {self.__vertex[0]}. Please raise variance'
+                f'minimum expected target variance value(after dilate) for '
+                f'this process is {round(self.__vertex[0],3)}. Raise goal variance'
                 )
         
         self.__portf_rtn = self.__cal_portf_rtn_unbounds_from_var(
@@ -291,8 +294,8 @@ class MeanVarOpt:
         
         if goal_r < self.__vertex[1]:
             raise ValueError(
-                f"Minimum expected target return value(after dilate) "
-                f"for current combination is {self.__vertex[1]}. Please raise rtn"
+                f"minimum expected target return value(after dilate) for "
+                f"this process is {round(self.__vertex[1],3)}. Raise goal return"
                 )
         
         self.__b = np.array([goal_r, 1.0]).astype(np.float64)
@@ -316,8 +319,8 @@ class MeanVarOpt:
         
         if goal_var < self.__vertex[0]:
             raise ValueError(
-                f"Minimum expected target variance value(after dilate) "
-                f"for current combination is {self.__vertex[0]}. Please raise variance"
+                f"minimum expected target variance value(after dilate) for "
+                f"this process is {round(self.__vertex[0],3)}. Raise goal variance"
                 )
         
         goal_r = self.__cal_portf_rtn_unbounds_from_var(
