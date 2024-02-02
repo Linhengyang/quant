@@ -128,10 +128,11 @@ class addSTD:
 
             # 添加 suffix_std 项
             std_argname = self.__var_argname.replace('var', 'std')
-            try:
-                bt_res[std_argname] = np.sqrt( bt_res[self.__var_argname] )
-            except:
+            std = np.sqrt( bt_res[self.__var_argname] )
+            if np.isnan(std):
                 bt_res[std_argname] = np.float32(-1)
+            else:
+                bt_res[std_argname] = std
             
             return bt_res
         
