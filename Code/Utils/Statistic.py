@@ -22,14 +22,15 @@ def multiCoLinear(
         id_lst: t.Union[t.List[str], None] = None
         ) -> np.ndarray:
     '''
-    given covariance matrix, and corresponding id list
+    given covariance matrix, and id list\n
     return:
         id pairs which are in co-linearity
     e.g,
-        corr_mat = [[1.0, 0.8, 1.0, 0.6]
-                    [0.8, 1.0, 0.2, 1.0]
-                    [1.0, 0.2, 1.0, 0.5]
-                    [0.6, 1.0, 0.5, 1.0]]
+        corr_mat =\n
+        [[1.0, 0.8, 1.0, 0.6]\n
+         [0.8, 1.0, 0.2, 1.0]\n
+         [1.0, 0.2, 1.0, 0.5]\n
+         [0.6, 1.0, 0.5, 1.0]]
 
     if not input id_lst:
         return: [0, 2], [1, 3] as 2-d nparray
