@@ -88,8 +88,6 @@ def runner():
         'benchmark': BT_bchmak
     }
 
-    # mvopt_strat = meanvarOptStrat(inputs)
-    # result = mvopt_strat.detail_window(12)
     
     return serialize(result)
 
