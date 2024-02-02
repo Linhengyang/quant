@@ -81,7 +81,7 @@ class meanvarOptStrat:
         self.__portf_w_list, self.__detail_solve_results = \
             [np.repeat(1/num_assets, num_assets), ], []
 
-        for train_rtn_mat in train_rtn_mat_list:
+        for i, train_rtn_mat in enumerate(train_rtn_mat_list):
 
             cur_res = self.__solve_single_mvopt(
                 train_rtn_mat,
@@ -90,6 +90,7 @@ class meanvarOptStrat:
                 self.__flag,
                 expt_tgt_value
                 )
+            cur_res['position_no'] = i + 1
 
             if cur_res['solve_status'] in ('direct', 'qp_optimal'):
                 self.__portf_w_list.append( cur_res['portf_w'] )
@@ -103,7 +104,6 @@ class meanvarOptStrat:
         hold_rtn_mat_list = [ hold_rtn_mat/dilate for hold_rtn_mat in hold_rtn_mat_list ]
 
         return basicBT_multiPeriods(self.__portf_w_list[1:], hold_rtn_mat_list)
-
 
 
 
@@ -211,10 +211,6 @@ class meanvarOptStrat:
         cov_mat = np.cov(train_rtn_mat)
         rtn_rates = train_rtn_mat.mean(axis=1)
 
-
-        fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
-        
-        res = fin(expt_tgt_value, mvo_target)
         try:
             fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
             
@@ -232,3 +228,46 @@ class meanvarOptStrat:
                 }
         
         return res
+    
+
+
+    def detail_window(self, position_no: int):
+        '''
+        return every details about one of single position window
+
+        "position_no": int, starts from 1
+        "train_rtn_mat": np.ndarray
+        "constraints": list of None or np.ndarray
+        "mvo_target": str
+        "expt_tgt_value": np.floating
+        "solve_res": basicPortfSolveRes
+        "hold_rtn_mat": np.ndarray
+        '''
+
+        train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, constraints, flag,\
+            expt_tgt_value = self._get_meanvar_data_params()
+        
+        assert position_no <= len(train_rtn_mat_list), \
+            f"position_no must no larger than {len(train_rtn_mat_list)}"
+
+        train_rtn_mat = train_rtn_mat_list[position_no-1]
+
+        cur_res = self.__solve_single_mvopt(
+            train_rtn_mat,
+            assets_idlst,
+            constraints,
+            flag,
+            expt_tgt_value
+            )
+        
+        hold_rtn_mat = hold_rtn_mat_list[position_no-1] / dilate
+
+        return {
+            "position_no": position_no,
+            "train_rtn_mat": train_rtn_mat,
+            "constraints": constraints,
+            "mvo_target": flag,
+            "expt_tgt_value": expt_tgt_value,
+            "solve_res": cur_res,
+            "hold_rtn_mat": hold_rtn_mat
+        }
