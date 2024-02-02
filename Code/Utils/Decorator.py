@@ -151,7 +151,7 @@ class addSharpe:
     and risk free rate.
     '''
     def __init__(self,
-                 r_f: np.float32,
+                 r_f: np.floating,
                  rtn_argname: str,
                  var_argname: str,
                  ) -> None:
