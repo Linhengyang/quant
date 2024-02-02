@@ -19,6 +19,7 @@ from Code.projs.asset_allocate.inputParser import (
     get_constraints
     )
 from Code.Utils.Decorator import (
+    tagFunc,
     deDilate,
     addAnnual,
     addSTD
@@ -55,19 +56,20 @@ class meanvarOptStrat:
         self.__flag = ''
         
 
+
     @addAnnual('rtn', begindate, termidate)
-    @deDilate(dilate)
+    @tagFunc('dedilated')
     @addSTD('var')
     def backtest(self) -> dict:
         '''
         de-dilated
-            'rtn': np.float32
-            'var': np.float32,
-            'std': np.float32
+            'rtn': np.floating
+            'var': np.floating,
+            'std': np.floating
             'trade_days': int,
             'total_cost': float,
-            'gross_rtn': np.float32
-            'annual_rtn': np.float32
+            'gross_rtn': np.floating
+            'annual_rtn': np.floating
         '''
 
         train_rtn_mat_list, hold_rtn_mat_list, self.__assets_idlst, constraints, self.__flag,\
@@ -79,7 +81,7 @@ class meanvarOptStrat:
         self.__portf_w_list, self.__detail_solve_results = \
             [np.repeat(1/num_assets, num_assets), ], []
 
-        for train_rtn_mat in train_rtn_mat_list:
+        for i, train_rtn_mat in enumerate(train_rtn_mat_list):
 
             cur_res = self.__solve_single_mvopt(
                 train_rtn_mat,
@@ -88,6 +90,7 @@ class meanvarOptStrat:
                 self.__flag,
                 expt_tgt_value
                 )
+            cur_res['position_no'] = i + 1
 
             if cur_res['solve_status'] in ('direct', 'qp_optimal'):
                 self.__portf_w_list.append( cur_res['portf_w'] )
@@ -96,10 +99,11 @@ class meanvarOptStrat:
             
             self.__detail_solve_results.append(cur_res)
 
-        BT_mvopt = basicBT_multiPeriods(self.__portf_w_list[1:], hold_rtn_mat_list)
+        # 在 basicBT_multiPeriods 中，由于涉及到复利累乘，所以需要考虑 1+de-dilated rtn
+        # 所以必须在这里传入 de-dilated hold_rtn_mat. 在这之后，BT的结果不需要de-dilate
+        hold_rtn_mat_list = [ hold_rtn_mat/dilate for hold_rtn_mat in hold_rtn_mat_list ]
 
-        return BT_mvopt
-
+        return basicBT_multiPeriods(self.__portf_w_list[1:], hold_rtn_mat_list)
 
 
 
@@ -186,7 +190,7 @@ class meanvarOptStrat:
         assets_idlst: t.List[str],
         constraints: t.List[t.Union[np.ndarray, None]],
         mvo_target: str,
-        expt_tgt_value: np.float32,
+        expt_tgt_value: np.floating,
         ) -> Any:
         '''
         input:
@@ -194,23 +198,20 @@ class meanvarOptStrat:
             assets_idlst: t.List[str],
             constraints: t.List[t.Union[np.ndarray, None]],
             mvo_target: str,
-            expt_tgt_value: np.float32,
+            expt_tgt_value: np.floating,
         return:
         de-dilate
             portf_w: np.ndarray
-            portf_rtn: np.float32
-            portf_var: np.float32
-            portf_std: np.float32
+            portf_rtn: np.floating
+            portf_var: np.floating
+            portf_std: np.floating
             solve_status: str
             assets_idlst: list
         '''
+
         cov_mat = np.cov(train_rtn_mat)
         rtn_rates = train_rtn_mat.mean(axis=1)
-
-
-        fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
         
-        res = fin(expt_tgt_value, mvo_target)
         try:
             fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
             
@@ -228,3 +229,49 @@ class meanvarOptStrat:
                 }
         
         return res
+    
+
+
+
+
+
+    def detail_window(self, position_no: int):
+        '''
+        return every details about one of single position window
+
+        "position_no": int, starts from 1
+        "train_rtn_mat": np.ndarray
+        "constraints": list of None or np.ndarray
+        "mvo_target": str
+        "expt_tgt_value": np.floating
+        "solve_res": basicPortfSolveRes
+        "hold_rtn_mat": np.ndarray
+        '''
+
+        train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, constraints, flag,\
+            expt_tgt_value = self._get_meanvar_data_params()
+        
+        assert position_no <= len(train_rtn_mat_list), \
+            f"position_no must no larger than {len(train_rtn_mat_list)}"
+
+        train_rtn_mat = train_rtn_mat_list[position_no-1]
+
+        cur_res = self.__solve_single_mvopt(
+            train_rtn_mat,
+            assets_idlst,
+            constraints,
+            flag,
+            expt_tgt_value
+            )
+        
+        hold_rtn_mat = hold_rtn_mat_list[position_no-1] / dilate
+
+        return {
+            "position_no": position_no,
+            "train_rtn_mat": train_rtn_mat,
+            "constraints": constraints,
+            "mvo_target": flag,
+            "expt_tgt_value": expt_tgt_value,
+            "solve_res": cur_res,
+            "hold_rtn_mat": hold_rtn_mat
+        }

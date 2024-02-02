@@ -2,7 +2,7 @@ import warnings
 from operator import itemgetter
 from flask import request, Blueprint
 from typing import Any
-import copy
+from Code.Utils.Decorator import serialize
 
 warnings.filterwarnings('ignore')
 app_name = __name__
@@ -80,20 +80,14 @@ def runner():
     BT_bchmak = bchmk_strat.backtest()
 
 
-    # serialize
-    details = copy.deepcopy(mvopt_strat.detail_solve_results)
-    weights = copy.deepcopy(mvopt_strat.portf_w_list)
-
-    for det_res in details:
-        det_res['portf_w'] = list( det_res['portf_w'] )
-
-    weights = [list(portf_w) for portf_w in weights]
-
-    return {
-        'details': details,
-        'weights': weights,
+    result = {
+        'details': mvopt_strat.detail_solve_results,
+        'weights': mvopt_strat.portf_w_list,
         'assets_id': mvopt_strat.assets_idlst,
         'backtest': BT_mvopt,
         'benchmark': BT_bchmak
     }
+
+    
+    return serialize(result)
 
