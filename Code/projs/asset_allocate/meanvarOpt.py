@@ -223,7 +223,7 @@ class meanvarOptStrat:
             res = {
                 'portf_w': np.array([]),
                 'portf_rtn': 0,
-                'portf_var': -1,
+                'portf_var': -dilate,
                 'solve_status': 'FAIL_' + str(e),
                 'assets_idlst': assets_idlst
                 }

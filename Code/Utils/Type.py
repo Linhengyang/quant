@@ -8,8 +8,8 @@ import numpy as np
 
 class basicPortfSolveRes(TypedDict):
     portf_w: np.ndarray
-    portf_rtn: np.float32
-    portf_var: np.float32
+    portf_rtn: np.floating
+    portf_var: np.floating
     solve_status: str
     assets_idlst: list
 
@@ -18,9 +18,9 @@ class basicPortfSolveRes(TypedDict):
 
 
 class basicBackTestRes(TypedDict):
-    rtn: np.float32
-    var: np.float32
+    rtn: np.floating
+    var: np.floating
     trade_days: int
-    total_cost: np.float32
-    gross_rtn: np.float32
+    total_cost: np.floating
+    gross_rtn: np.floating
 
