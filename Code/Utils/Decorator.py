@@ -96,8 +96,11 @@ class addAnnual:
 
             _rtn = bt_res[self.__rtn_argname]
             # 添加 annual_{rtn_argname}
-            bt_res['annual_' + self.__rtn_argname] =\
-                np.power( 1 + _rtn, 1/self.__delta_year ) - 1
+            if _rtn <= -1.0:
+                bt_res['annual_' + self.__rtn_argname] =\
+                    np.power( 1 + _rtn, 1/self.__delta_year ) - 1
+            else:
+                bt_res['annual_' + self.__rtn_argname] = np.float32(-1)
             
             return bt_res
         
