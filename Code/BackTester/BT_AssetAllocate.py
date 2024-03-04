@@ -95,14 +95,14 @@ def basicBT_multiPeriods(
         period_rtn_mat_list: list of ndarray
     return:
     {
-        'rtn': np.float32
+        'rtn': np.float32,
         'var': np.float32,
         'trade_days': int,
         'total_cost': np.float32,
         'gross_rtn': np.float32
     }
     '''
-
+    
     if not invest_amount:
         invest_amount = 10000.0
 
