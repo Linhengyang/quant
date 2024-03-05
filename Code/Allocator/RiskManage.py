@@ -12,7 +12,7 @@
 """
 import scipy.optimize as scipyopt
 import typing as t
-from Code.Utils.Type import basicPortfSolveRes
+# from Code.Utils.Type import basicPortfSolveRes
 import numpy as np
 
 
@@ -21,6 +21,12 @@ def total_weight_constraint(x):
 
 def loan_only_constraint(x):
     return x
+
+def lower_bounds_constraint(x, l_b):
+    return x - l_b
+
+def upper_bounds_constraint(x, u_b):
+    return u_b - x
 
 
 class RiskManage:
@@ -40,7 +46,8 @@ class RiskManage:
     __slots__ = ("assets_idlst",
                 "__solve_status", "__portf_w", "__portf_var", "__portf_rtn", 
                 "__asset_r_mat", "__cov_mat", "__category_mat", "__tgt_contrib_ratio",
-                  "__num_risk", "__num_assets",)
+                "__low_constraints", "__high_constraints",
+                "__num_risk", "__num_assets",)
     
 
     def __init__(
@@ -48,20 +55,24 @@ class RiskManage:
             asset_r_mat: np.ndarray,
             category_mat: t.Union[np.ndarray, None],
             tgt_contrib_ratio: t.Union[np.ndarray, None],
+            constraints: t.List[t.Union[np.ndarray, None]],
             assets_idlst: list
             ) -> None:
         
         self.assets_idlst = assets_idlst # 记录资产的排列
 
         self.__asset_r_mat = asset_r_mat
+        self.__num_assets = asset_r_mat.shape[0] # 资产个数
 
         self.__cov_mat = np.cov(asset_r_mat)
 
         if category_mat is not None:
-            assert len( np.unique( category_mat.sum(axis=0) ) ) == 1 and\
-                    np.unique( category_mat.sum(axis=0) )[0] == 1, \
-                    "Category Matrix must satisfy column sum shall be 1"\
-        
+
+            categ_mat_col_sum = np.unique( category_mat.sum(axis=0) )
+
+            assert len( categ_mat_col_sum ) == 1 and categ_mat_col_sum[0] == 1, \
+                    "Category Matrix must satisfy column sum shall be 1"
+            
         self.__category_mat = category_mat
 
         # 风险的个数
@@ -69,18 +80,20 @@ class RiskManage:
 
         if tgt_contrib_ratio is not None:
             # 风险预算
+
             # 检查1: 风险的个数 等于 tgt_contrib_ratio的长度
             assert self.__num_risk == len(tgt_contrib_ratio),\
                 f'risk number {self.__num_risk} mismatch target ratio {len(tgt_contrib_ratio)}'
+            
             # 检查2: tgt_contrib_ratio 之和要接近1
             assert np.abs(tgt_contrib_ratio.sum() - 1) <= 0.01,\
                 f"tgt_contrib_ratio must be summed to 1, now is {tgt_contrib_ratio.sum()}"
             
         self.__tgt_contrib_ratio = tgt_contrib_ratio
-        
-        self.__solve_status: str = "" # 初始化求解状态为空字符
 
-        self.__num_assets = asset_r_mat.shape[0] # 资产个数
+        self.__low_constraints, self.__high_constraints = constraints
+
+        self.__solve_status: str = "" # 初始化求解状态为空字符
 
         self.__portf_w: np.ndarray = np.array([]) # portfolio 实际权重 待求解
         self.__portf_var: np.floating = np.float32(-1) # porfolio 实际var 待求解
@@ -180,13 +193,30 @@ class RiskManage:
 
     def __call__(
             self
-            ) -> basicPortfSolveRes:
+            ):
+            # ) -> basicPortfSolveRes:
         
-        # 初始值 均分
+        # 初始猜测 均分点
         w0 = np.array([1/self.__num_assets ] * self.__num_assets)
 
-        cons = ({'type': 'eq', 'fun': total_weight_constraint},
-                {'type': 'ineq', 'fun':loan_only_constraint})
+        # 如果下限是 None, 设定为 all 0.0
+        if self.__low_constraints is None:
+            lower_bounds = np.array([0.0] * self.__num_assets)
+        else:
+            lower_bounds = self.__low_constraints
+        
+        # 如果上限是 None, 设定为 all 1.0
+        if self.__high_constraints is None:
+            upper_bounds = np.array([1.0] * self.__num_assets)
+        else:
+            upper_bounds = self.__high_constraints
+        
+        cons = (
+            {'type': 'eq', 'fun': total_weight_constraint},
+            {'type': 'ineq', 'fun':loan_only_constraint},
+            {'type': 'ineq', 'fun':lower_bounds_constraint, 'args':(lower_bounds,)},
+            {'type': 'ineq', 'fun':upper_bounds_constraint, 'args':(upper_bounds,)},
+            )
         
         res = scipyopt.minimize(self.obj_func_on_assets, w0,
                                 args=[self.__cov_mat,
@@ -229,8 +259,9 @@ if __name__ == "__main__":
                      category_mat = np.array([[1,1,1,0,0,0],
                                               [0,0,0,1,1,0],
                                               [0,0,0,0,0,1]]),
-
                      tgt_contrib_ratio= np.array([1/3]*3),
+                     constraints = [np.array([0]*6), np.array([1]*6)],
+
                      assets_idlst = ['0001.SH', '0002.SH', '0003.SH', '0004.SH', '0005.SH', '0006.SH']
                      )
     w_rb = fin()
