@@ -18,17 +18,12 @@ inputs = {
         #   "risk_avers_factor":0.3,
         #   "equi_wght_vec":[0.1, 0.3, 0.2, 0.15, 0.25],
         #   "tau":0.05,
-          # "low_constraints":[-10, -10, -10, -10, -10], "high_constraints":[20, 20, 20, 20, 20],
-        #   "category_mat":[[1,1,0,0,0],
-        #                   [0,0,1,1,0],
-        #                   [0,0,0,0,1]],
-          # "tgt_contrib_ratio":[0.5, 0.3, 0.2],
-          # "assets_idx":["000001.SH", "000016.SH", "000002.SH", "000009.SH", "000010.SH"],
-          "mvo_target":"maxReturn", # minWave: get min var from given r; maxReturn: get max r from given var; sharp: max shap ratio
+          "mvo_target":"maxReturn",
+          # minWave: get min var from given r; maxReturn: get max r from given var; sharp: max shap ratio
           "expt_tgt_value":0.3,
           "rtn_dilate":100,
           "begindate":"20230301",
-          "termidate":"20231209",
+          "termidate":"20230509",
           "gapday":10,
           "back_window_size":30,
           "benchmark":"CSI800",
@@ -70,6 +65,6 @@ inputs = {
               },
           ]
           }
-r = requests.post("http://127.0.0.1:8000/asset_allocate/mean_var_opt", json=inputs) # post data
-# r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
+# r = requests.post("http://127.0.0.1:8000/asset_allocate/mean_var_opt", json=inputs) # post data
+r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
 print(r.text)

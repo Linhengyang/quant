@@ -106,8 +106,8 @@ class RiskContribRatiosCheck:
 
         if isinstance(tgt_contrib_ratio, np.ndarray):
 
-            assert np.sum(tgt_contrib_ratio) <= 1.0, \
-                "sum of target risk contribution ratiomust be <= 1"
+            assert np.sum(tgt_contrib_ratio) <= 1.01, \
+                f"sum of target risk contribution ratio {np.sum(tgt_contrib_ratio)} must be <= 1"
             
             assert any( tgt_contrib_ratio >= 0.0 ), \
                 'target risk contribution ratio must be all >= 0'
