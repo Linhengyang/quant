@@ -104,7 +104,31 @@ class riskMngStrat:
 
         return basicBT_multiPeriods(self.__portf_w_list[1:], hold_rtn_mat_list)
     
+    
+    @property
+    def assets_idlst(self) -> list:
+        return self.__assets_idlst
 
+
+
+
+    @property
+    def flag(self) -> str:
+        return self.__flag
+
+
+
+
+    @property
+    def portf_w_list(self) -> list:
+        return self.__portf_w_list[1:]
+
+
+
+
+    @property
+    def detail_solve_results(self) -> list:
+        return self.__detail_solve_results
 
     def _get_riskmng_data_params(self) -> Any:
         '''
