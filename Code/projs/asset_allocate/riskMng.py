@@ -143,17 +143,7 @@ class riskMngStrat:
         assets_info_lst = self.__inputs["assets_info"] # assets_info
 
         assets_dict, src_tbl_dict = parseAssets2dicts(assets_info_lst)
-
-        tgt_contrib_ratio = get_tgt_risk_ratios( assets_dict, assets_idlst )
         
-        riskmng_target = "parity" if tgt_contrib_ratio is None else "budget"
-
-        print(
-            f'Back Test for risk {riskmng_target} strategy \
-            from {begindate} to {termidate} trading on every {gapday} \
-            upon {len(assets_dict)} assets')
-
-
         tbl_names = list( src_tbl_dict.keys() ) # list of str
         assets_ids = [ src_tbl_dict[tbl] for tbl in tbl_names] # list of lists
 
@@ -169,6 +159,15 @@ class riskMngStrat:
                 _DB,
                 _MKT_DATE_TABLE
             )
+        
+        tgt_contrib_ratio = get_tgt_risk_ratios( assets_dict, assets_idlst )
+
+        riskmng_target = "parity" if tgt_contrib_ratio is None else "budget"
+
+        print(
+            f'Back Test for risk {riskmng_target} strategy \
+            from {begindate} to {termidate} trading on every {gapday} \
+            upon {len(assets_dict)} assets')
         
         constraints = get_constraints( assets_dict, assets_idlst )
 
