@@ -18,12 +18,11 @@ inputs = {
         #   "risk_avers_factor":0.3,
         #   "equi_wght_vec":[0.1, 0.3, 0.2, 0.15, 0.25],
         #   "tau":0.05,
-          "mvo_target":"maxReturn",
-          # minWave: get min var from given r; maxReturn: get max r from given var; sharp: max shap ratio
+          "mvo_target":"maxReturn", # minWave: get min var from given r; maxReturn: get max r from given var; sharp: max shap ratio
           "expt_tgt_value":0.3,
           "rtn_dilate":100,
           "begindate":"20230301",
-          "termidate":"20230509",
+          "termidate":"20230525",
           "gapday":10,
           "back_window_size":30,
           "benchmark":"CSI800",
