@@ -217,7 +217,8 @@ class RiskManage:
             {'type': 'ineq', 'fun':upper_bounds_constraint, 'args':(upper_bounds,)},
             )
         
-        res = scipyopt.minimize(self.obj_func_on_assets, w0,
+        res = scipyopt.minimize(self.obj_func_on_assets,
+                                w0,
                                 args=[self.__cov_mat,
                                       self.__category_mat,
                                       self.__tgt_contrib_ratio],
