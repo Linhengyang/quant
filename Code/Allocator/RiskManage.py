@@ -12,7 +12,7 @@
 """
 import scipy.optimize as scipyopt
 import typing as t
-# from Code.Utils.Type import basicPortfSolveRes
+from Code.Utils.Type import basicPortfSolveRes
 import numpy as np
 
 
@@ -193,8 +193,7 @@ class RiskManage:
 
     def __call__(
             self
-            ):
-            # ) -> basicPortfSolveRes:
+            ) -> basicPortfSolveRes:
         
         # 初始猜测 均分点
         w0 = np.array([1/self.__num_assets ] * self.__num_assets)
