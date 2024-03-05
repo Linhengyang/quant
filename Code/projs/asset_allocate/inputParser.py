@@ -191,7 +191,7 @@ def parseAssets2dicts(
         # 如果输入为空，将得到空字符串 ''
         asset_id, categ = asset.get('id'), asset.get('category')
         l_b, u_b = asset.get('lower_bound'), asset.get('upper_bound')
-        risk_r = asset.get('asset_risk_ratio')
+        risk_r = asset.get('asset_risk_ratio', '')
 
         assets_dict[asset_id] = {'categ':categ, 'l_b':l_b, 'u_b':u_b, 'risk_r': risk_r}
 
