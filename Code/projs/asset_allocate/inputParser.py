@@ -55,8 +55,8 @@ def get_constraints(
         ) -> t.List[t.Union[np.ndarray, None]]:
     '''
     input:
-        1. assets_dict,  {'id': {'categ':, 'l_b', 'u_b'} }
-            key is asset_id, value is {'categ', 'l_b', 'u_b'}
+        1. assets_dict,  {'id': {'categ':, 'l_b', 'u_b', 'risk_r'} }
+            key is asset_id, value is {'categ', 'l_b', 'u_b', 'risk_r'}
         2. assets_idlst, [ 'id1', 'id2', 'id3',... ]
     
     return:
@@ -92,6 +92,75 @@ def get_constraints(
 
 
 
+
+
+class RiskContribRatiosCheck:
+
+    def __init__(self, func: Callable) -> None:
+        self.func = func
+
+
+    def __call__(self, *args, **kwargs) -> Any:
+        
+        tgt_contrib_ratio = self.func(*args, **kwargs)
+
+        if isinstance(tgt_contrib_ratio, np.ndarray):
+
+            assert np.sum(tgt_contrib_ratio) <= 1.0, \
+                "sum of target risk contribution ratiomust be <= 1"
+            
+            assert any( tgt_contrib_ratio >= 0.0 ), \
+                'target risk contribution ratio must be all >= 0'
+            
+    
+        return tgt_contrib_ratio
+
+
+
+
+@RiskContribRatiosCheck
+def get_tgt_risk_ratios(
+        assets_dict: dict,
+        assets_idlst: list,
+        def_risk_r: float = 0.0,
+        ) -> t.List[t.Union[np.ndarray, None]]:
+    '''
+    input:
+        1. assets_dict,  {'id': {'categ':, 'l_b', 'u_b', 'risk_r'} }
+            key is asset_id, value is {'categ', 'l_b', 'u_b', 'risk_r'}
+        2. assets_idlst, [ 'id1', 'id2', 'id3',... ]
+    
+    return:
+        tgt_contrib_ratio
+
+    np.array of target risk contrib ratio with the order of assets_idlst or None
+    '''
+    tgt_contrib_ratio = []
+
+    for asset_id in assets_idlst:
+        tgt_risk_r = assets_dict[asset_id]['risk_r']
+
+        try:
+            tgt_contrib_ratio.append( float(tgt_risk_r) )
+        except ValueError as err:
+            tgt_contrib_ratio.append( def_risk_r )
+    
+    tgt_contrib_ratio = np.array(tgt_contrib_ratio)
+
+    if np.mean(tgt_contrib_ratio) == 0.0:
+        # 如果贡献风险比例都是 0.0, 说明没有输入任何风险贡献比例
+        tgt_contrib_ratio = None
+    
+    
+    return tgt_contrib_ratio
+
+
+
+
+
+
+
+
 def get_tbl_asset(asset_id:str, *args, **kwargs) -> str:
     return "aidx_eod_prices"
 
@@ -108,9 +177,9 @@ def parseAssets2dicts(
     Input:
         assets_info_lst, list of {'id':, 'low_b':, 'upper_b':, 'categ': ...}
 
-    return:
-        1. assets_dict, {'id': {'categ':, 'l_b', 'u_b'} }
-            key is asset_id, value is {'categ', 'l_b', 'u_b'}
+    return: \n.
+        1. assets_dict, {'id': {'categ':, 'l_b', 'u_b', 'risk_r'} }
+            key is asset_id, value is {'categ', 'l_b', 'u_b', 'risk_r'} \n.
         2. src_tbl_dict, {'tbl_name': ['id1', 'id2'] }
             key is table name, value is [asset ids from table]
     
@@ -122,8 +191,9 @@ def parseAssets2dicts(
         # 如果输入为空，将得到空字符串 ''
         asset_id, categ = asset.get('id'), asset.get('category')
         l_b, u_b = asset.get('lower_bound'), asset.get('upper_bound')
+        risk_r = asset.get('asset_risk_ratio')
 
-        assets_dict[asset_id] = {'categ':categ, 'l_b':l_b, 'u_b':u_b}
+        assets_dict[asset_id] = {'categ':categ, 'l_b':l_b, 'u_b':u_b, 'risk_r': risk_r}
 
         tbl = get_tbl_asset(asset_id, categ)
 
