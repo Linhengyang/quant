@@ -18,13 +18,17 @@ asset_allocate_app = Flask(app_name, static_folder=static_folder, template_folde
 
 
 
-from Code.projs.asset_allocate.runner import mvopt_api, riskmng_api
-
+from Code.projs.asset_allocate.runner import (
+    mvopt_api,
+    riskmng_api,
+    fxdcomb_api
+)
 
 
 
 asset_allocate_app.register_blueprint(mvopt_api)
 asset_allocate_app.register_blueprint(riskmng_api)
+asset_allocate_app.register_blueprint(fxdcomb_api)
 
 
 
