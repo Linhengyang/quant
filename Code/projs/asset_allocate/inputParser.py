@@ -11,8 +11,7 @@ warnings.filterwarnings('ignore')
 app_name = __name__
 static_folder = "Static"
 template_folder = 'Template'
-
-
+    
 
 
 class ConstraintsCheck:
@@ -62,7 +61,8 @@ def get_constraints(
     return:
         low_bounds
         upper_bounds
-    np.array of low/upper bounds with the order of assets_idlst or None
+    np.array of low/upper bounds with the order of assets_idlst or None \n.
+    only when all input lower bounds and upper bounds are all blank, returns Double None
     '''
     low_bounds, upper_bounds = [], []
 
@@ -74,11 +74,19 @@ def get_constraints(
             low_bounds.append( float(l_b) )
         except ValueError as err:
             low_bounds.append( def_l_b )
+        except TypeError:
+            raise TypeError(
+                f"wrong lower bound type as {l_b}"
+                )
 
         try:
             upper_bounds.append( float(u_b) )
         except ValueError as err:
             upper_bounds.append( def_u_b )
+        except TypeError:
+            raise TypeError(
+                f"wrong upper bound type as {u_b}"
+                )
     
     low_bounds = np.array(low_bounds)
     upper_bounds = np.array(upper_bounds)
@@ -90,11 +98,7 @@ def get_constraints(
     return [low_bounds, upper_bounds]
 
 
-
-
-
-
-class RiskContribRatiosCheck:
+class LinearAllocationCheck:
 
     def __init__(self, func: Callable) -> None:
         self.func = func
@@ -102,60 +106,65 @@ class RiskContribRatiosCheck:
 
     def __call__(self, *args, **kwargs) -> Any:
         
-        tgt_contrib_ratio = self.func(*args, **kwargs)
+        ratios = self.func(*args, **kwargs)
 
-        if isinstance(tgt_contrib_ratio, np.ndarray):
+        if isinstance(ratios, np.ndarray):
 
-            assert np.sum(tgt_contrib_ratio) <= 1.01, \
-                f"sum of target risk contribution ratio {np.sum(tgt_contrib_ratio)} must be <= 1"
+            assert np.sum(ratios) <= 1.01, \
+                f"sum of ratios {np.sum(ratios)} must be <= 1"
             
-            assert any( tgt_contrib_ratio >= 0.0 ), \
-                'target risk contribution ratio must be all >= 0'
+            assert any( ratios >= 0.0 ), \
+                'ratios must be all >= 0'
             
     
-        return tgt_contrib_ratio
+        return ratios
 
 
 
-
-@RiskContribRatiosCheck
-def get_tgt_risk_ratios(
+@LinearAllocationCheck
+def get_linear_ratios(
         assets_dict: dict,
         assets_idlst: list,
-        def_risk_r: float = 0.0,
+        key_name: str
         ) -> t.List[t.Union[np.ndarray, None]]:
     '''
     input:
-        1. assets_dict,  {'id': {'categ':, 'l_b', 'u_b', 'risk_r'} }
-            key is asset_id, value is {'categ', 'l_b', 'u_b', 'risk_r'}
+        1. assets_dict,  {'id': {'categ':, 'l_b', 'u_b', 'ratio'} }\n.
+            key is asset_id, value is {'categ', 'l_b', 'u_b', 'ratio'}
+        
         2. assets_idlst, [ 'id1', 'id2', 'id3',... ]
     
     return:
-        tgt_contrib_ratio
+        ratios consists of ratio of every asset.
 
-    np.array of target risk contrib ratio with the order of assets_idlst or None
+    np.array of ratios with the order of assets_idlst or None \n.
+    only when all ratios are all blank, returns None \n.
+    if only some ratios are blank, use average to fill
     '''
-    tgt_contrib_ratio = []
-
+    ratios = []
+    
+    num_blank = 0
+    ratio_sum = 0
     for asset_id in assets_idlst:
-        tgt_risk_r = assets_dict[asset_id]['risk_r']
+        val = assets_dict[asset_id][key_name]
 
         try:
-            tgt_contrib_ratio.append( float(tgt_risk_r) )
+            ratios.append( float(val) )
+            ratio_sum += float(val)
+
         except ValueError as err:
-            tgt_contrib_ratio.append( def_risk_r )
+            num_blank += 1
+            ratios.append( None )
     
-    tgt_contrib_ratio = np.array(tgt_contrib_ratio)
-
-    if np.mean(tgt_contrib_ratio) == 0.0:
-        # 如果贡献风险比例都是 0.0, 说明没有输入任何风险贡献比例
-        tgt_contrib_ratio = None
+    if num_blank == len(ratios):
+        ratios = None
+    else:
+        fill_val = (1-ratio_sum)/num_blank
+        ratios = [i if i is not None else fill_val for i in ratios]
     
+    ratios = np.array(ratios)
     
-    return tgt_contrib_ratio
-
-
-
+    return ratios
 
 
 
@@ -178,8 +187,9 @@ def parseAssets2dicts(
         assets_info_lst, list of {'id':, 'low_b':, 'upper_b':, 'categ': ...}
 
     return: \n.
-        1. assets_dict, {'id': {'categ':, 'l_b', 'u_b', 'risk_r'} }
-            key is asset_id, value is {'categ', 'l_b', 'u_b', 'risk_r'} \n.
+        1. assets_dict, {'id': {'categ':, 'l_b', 'u_b', 'risk_r', 'fixed_w'} }
+            key is asset_id, value is {'categ', 'l_b', 'u_b', 'risk_r', 'fixed_w'} \n.
+
         2. src_tbl_dict, {'tbl_name': ['id1', 'id2'] }
             key is table name, value is [asset ids from table]
     
@@ -188,12 +198,21 @@ def parseAssets2dicts(
     assets_dict, src_tbl_dict = {}, {}
 
     for asset in assets_info_lst:
-        # 如果输入为空，将得到空字符串 ''
-        asset_id, categ = asset.get('id'), asset.get('category')
-        l_b, u_b = asset.get('lower_bound'), asset.get('upper_bound')
-        risk_r = asset.get('asset_risk_ratio', '')
+        # asset中，各个key可能存在，也可能不存在
+        # 存在的key可以是空输入，得到 ''
+        asset_id, categ = asset.get('id', ''), asset.get('category', '')
+        l_b, u_b = asset.get('lower_bound', ''), asset.get('upper_bound', '')
 
-        assets_dict[asset_id] = {'categ':categ, 'l_b':l_b, 'u_b':u_b, 'risk_r': risk_r}
+        risk_r = asset.get('asset_risk_ratio', ''),
+        fixed_w = asset.get('fixed_wght', ''),
+
+        assets_dict[asset_id] =\
+            {
+            'categ':categ,
+            'l_b':l_b, 'u_b':u_b,
+            'risk_r': risk_r,
+            'fixed_w': fixed_w
+            }
 
         tbl = get_tbl_asset(asset_id, categ)
 
