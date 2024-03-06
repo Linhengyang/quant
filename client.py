@@ -32,38 +32,44 @@ inputs = {
                 "lower_bound":'',
                 "upper_bound":'',
                 "category":"index",
-                "asset_risk_ratio":0.4
+                "asset_risk_ratio":0.4,
+                "fixed_wght":0.2
               },
               {
                 "id":"000016.SH",
                 "lower_bound":'',
                 "upper_bound":'',
                 "category":"index",
-                "asset_risk_ratio":0.1
+                "asset_risk_ratio":0.1,
+                "fixed_wght":0.3
               },
               {
                 "id":"000002.SH",
                 "lower_bound":'',
                 "upper_bound":'',
                 "category":"index",
-                "asset_risk_ratio":0.2
+                "asset_risk_ratio":0.2,
+                "fixed_wght":0.15
               },
               {
                 "id":"000009.SH",
                 "lower_bound":'',
                 "upper_bound":'',
                 "category":"index",
-                "asset_risk_ratio":0.1
+                "asset_risk_ratio":0.1,
+                "fixed_wght":0.25
               },
               {
                 "id":"000010.SH",
                 "lower_bound":'',
                 "upper_bound":'',
                 "category":"index",
-                "asset_risk_ratio":0.2
+                "asset_risk_ratio":0.2,
+                "fixed_wght":0.1
               },
           ]
           }
 # r = requests.post("http://127.0.0.1:8000/asset_allocate/mean_var_opt", json=inputs) # post data
-r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
+# r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
+r = requests.post("http://127.0.0.1:8000/asset_allocate/fixed_combination", json=inputs) # post data
 print(r.text)
