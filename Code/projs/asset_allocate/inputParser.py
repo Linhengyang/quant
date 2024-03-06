@@ -158,9 +158,10 @@ def get_linear_ratios(
     
     if num_blank == len(ratios):
         ratios = None
-    else:
+    elif num_blank > 0:
         fill_val = (1-ratio_sum)/num_blank
         ratios = [i if i is not None else fill_val for i in ratios]
+
     
     ratios = np.array(ratios)
     
@@ -203,8 +204,8 @@ def parseAssets2dicts(
         asset_id, categ = asset.get('id', ''), asset.get('category', '')
         l_b, u_b = asset.get('lower_bound', ''), asset.get('upper_bound', '')
 
-        risk_r = asset.get('asset_risk_ratio', ''),
-        fixed_w = asset.get('fixed_wght', ''),
+        risk_r = asset.get('asset_risk_ratio', '')
+        fixed_w = asset.get('fixed_wght', '')
 
         assets_dict[asset_id] =\
             {
