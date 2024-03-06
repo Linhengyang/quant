@@ -17,7 +17,7 @@ from Code.projs.asset_allocate.runner import *
 from Code.projs.asset_allocate.inputParser import (
     parseAssets2dicts,
     get_constraints,
-    get_tgt_risk_ratios
+    get_linear_ratios
     )
 from Code.Utils.Decorator import (
     tagFunc,
@@ -160,7 +160,7 @@ class riskMngStrat:
                 _MKT_DATE_TABLE
             )
         
-        tgt_contrib_ratio = get_tgt_risk_ratios( assets_dict, assets_idlst )
+        tgt_contrib_ratio = get_linear_ratios( assets_dict, assets_idlst, 'risk_r')
 
         riskmng_target = "parity" if tgt_contrib_ratio is None else "budget"
 
