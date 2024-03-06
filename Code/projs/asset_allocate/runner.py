@@ -11,6 +11,7 @@ template_folder = 'Template'
 
 mvopt_api = Blueprint('mean_var', __name__)
 riskmng_api = Blueprint('risk_manage', __name__)
+fxdcomb_api = Blueprint('fixed_comb', __name__)
 
 
 __all__ = [
@@ -137,6 +138,54 @@ def riskmanage():
         'weights': riskmng_strat.portf_w_list,
         'assets_id': riskmng_strat.assets_idlst,
         'backtest': BT_riskmng,
+        'benchmark': BT_bchmak
+    }
+
+    
+    return serialize(result)
+
+
+
+
+@fxdcomb_api.route('/asset_allocate/fixed_combination', methods=['POST'])
+def fixedcomb():
+    '''
+    output:
+    {
+        'details': [res1 = {'portf_w':[], 'portf_rtn': ,...}, res2],
+        'weights': [portf_w1 = [], portf_w2 = [], ...],
+        'assets_id': ['id1', 'id2'],
+        'backtest':
+            {'rtn', 'var', 'std', 'trade_days':, 'total_cost':, 
+            'gross_rtn':, 'annual_rtn':},
+        'benchmark':
+            {'rtn', 'var', 'std', 'trade_days':, 'total_cost':,
+            'gross_rtn':, 'annual_rtn':},
+        'excess':
+            {'rtn':, 'annual_rtn':}
+    }
+    '''
+
+    inputs = request.json
+
+    release2global(inputs)
+
+
+    from Code.projs.asset_allocate.benchmark import benchmarkStrat
+    from Code.projs.asset_allocate.fixedComb import FxdCombStrat
+
+    fxdcomb_strat = FxdCombStrat(inputs)
+    BT_fxdcomb = fxdcomb_strat.backtest()
+
+    bchmk_strat = benchmarkStrat(benchmark)
+    BT_bchmak = bchmk_strat.backtest()
+
+
+    result = {
+        'details': fxdcomb_strat.detail_solve_results,
+        'weights': fxdcomb_strat.portf_w_list,
+        'assets_id': fxdcomb_strat.assets_idlst,
+        'backtest': BT_fxdcomb,
         'benchmark': BT_bchmak
     }
 
