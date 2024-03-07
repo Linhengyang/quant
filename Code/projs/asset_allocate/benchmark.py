@@ -80,6 +80,7 @@ class benchmarkStrat:
             'total_cost': float,
             'gross_rtn': np.float32
             'annual_rtn': np.float32
+            'drawdown': np.float32
         '''
 
         assets_ids, tbl_names, rebal_gapday = self.parse_benchmark(self.__flag)
