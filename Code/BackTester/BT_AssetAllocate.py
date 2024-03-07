@@ -100,7 +100,7 @@ def basicBT_multiPeriods(
         'trade_days': int,
         'total_cost': np.float32,
         'gross_rtn': np.float32,
-        'maxdd': np.float32
+        'drawdown': np.float32
     }
     '''
     
@@ -149,7 +149,7 @@ def basicBT_multiPeriods(
         'trade_days': trade_days,
         'total_cost': total_cost,
         'gross_rtn': gross_rtn,
-        'maxdd': maxdd
+        'drawdown': maxdd
         }
     
     return res
