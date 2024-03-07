@@ -70,6 +70,7 @@ class meanvarOptStrat:
             'total_cost': float,
             'gross_rtn': np.floating
             'annual_rtn': np.floating
+            'maxdd': np.floating
         '''
 
         train_rtn_mat_list, hold_rtn_mat_list, self.__assets_idlst, constraints, self.__flag,\

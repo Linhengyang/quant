@@ -47,3 +47,27 @@ def multiCoLinear(
         return colinear_ords_pair
     else:
         return np.array(id_lst)[colinear_ords_pair]
+    
+
+
+
+
+def maxdrawdown(
+        series: np.ndarray,
+        mode: str = 'index'
+        ) -> np.floating:
+    '''
+    return max drawdown rate from a series
+    mode has two options: index or rtnrate
+    '''
+    if mode == 'index':
+        previous_peaks = series.cummax()
+        drawdown = (series - previous_peaks)/previous_peaks
+
+    elif mode == 'rtnrate':
+        init_val = 10000.00
+        index_series = (1+series).cumprod() * init_val
+        previous_peaks = index_series.cummax()
+        drawdown = (index_series - previous_peaks)/previous_peaks
+
+    return drawdown.min()

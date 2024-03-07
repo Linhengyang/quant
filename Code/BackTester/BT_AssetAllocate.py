@@ -2,7 +2,7 @@ import numpy as np
 from typing import Any
 import typing as t
 from Code.Utils.Type import basicBackTestRes
-
+from Code.Utils.Statistic import maxdrawdown
 
 
 def rtn_period(
@@ -99,7 +99,8 @@ def basicBT_multiPeriods(
         'var': np.float32,
         'trade_days': int,
         'total_cost': np.float32,
-        'gross_rtn': np.float32
+        'gross_rtn': np.float32,
+        'maxdd': np.float32
     }
     '''
     
@@ -139,6 +140,7 @@ def basicBT_multiPeriods(
     trade_days = len(day_rtn_lst)
     total_cost = sum(cost_lst)
     gross_rtn = np.prod(1+portf_rtn_arr) - 1
+    maxdd = maxdrawdown(portf_rtn_arr, mode='rtnrate')
 
     res = {
         'rtn': ( invest_amount * gross_rtn - total_cost )/ \
@@ -146,7 +148,8 @@ def basicBT_multiPeriods(
         'var': np.var(portf_rtn_arr),
         'trade_days': trade_days,
         'total_cost': total_cost,
-        'gross_rtn': gross_rtn
+        'gross_rtn': gross_rtn,
+        'maxdd': maxdd
         }
     
     return res

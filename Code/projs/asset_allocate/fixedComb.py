@@ -69,6 +69,7 @@ class FxdCombStrat:
             'total_cost': float,
             'gross_rtn': np.floating
             'annual_rtn': np.floating
+            'maxdd': np.floating
         '''
         # 这里 fixed_weights 可以是None
         train_rtn_mat_list, hold_rtn_mat_list, self.__assets_idlst, fixed_weights = \
