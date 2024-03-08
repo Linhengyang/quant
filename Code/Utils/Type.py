@@ -8,8 +8,6 @@ import numpy as np
 
 class basicPortfSolveRes(TypedDict):
     portf_w: np.ndarray
-    portf_rtn: np.floating
-    portf_var: np.floating
     solve_status: str
     assets_idlst: list
 
