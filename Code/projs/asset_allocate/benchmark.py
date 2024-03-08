@@ -9,7 +9,7 @@ from Code.Utils.Decorator import (
     addAnnual,
     addSTD
     )
-
+import traceback
 import numpy as np
 import typing as t
 import sys
@@ -160,3 +160,39 @@ class benchmarkStrat:
                 f"wrong code {benchmark} for benchmark"
                 )
         return assets_ids, tbl_names, rebal_gapday
+    
+
+    @staticmethod
+    @addSTD('bchmk_var')
+    def __solve_single_bchmk_hold(
+        hold_rtn_mat: np.ndarray,
+        assets_idlst: t.List[str],
+        fixed_weights: np.ndarray
+        ) -> t.Any:
+        '''
+        input:
+            hold_rtn_mat_list: np.ndarray,
+            assets_idlst: t.List[str],
+            fixed_weights: np.ndarray
+        return:
+        de-dilate
+            bchmk_w: np.ndarray
+            bchmk_rtn: np.floating
+            bchmk_var: np.floating
+            bchmk_std: np.floating
+            assets_idlst: list
+        '''
+
+        try:            
+            res = {
+                'bchmk_w': fixed_weights,
+                'bchmk_rtn': hold_rtn_mat.mean(axis=1) @ fixed_weights,
+                'bchmk_var': fixed_weights @ np.cov(hold_rtn_mat) @ fixed_weights,
+                'assets_idlst': assets_idlst
+                }
+            
+        except Exception as e:
+            traceback.print_exc()
+            raise 
+        
+        return res

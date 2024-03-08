@@ -25,8 +25,6 @@ class MeanVarOpt:
     basicPortfSolveRes
     {
         'portf_w': np.ndarray
-        'portf_rtn': np.floating
-        'portf_var': np.floating
         'solve_status': str
         'assets_idlst': list
     }
@@ -370,8 +368,6 @@ class MeanVarOpt:
         
         return {
             'portf_w': self.portf_w,
-            'portf_rtn': self.portf_rtn,
-            'portf_var': self.portf_var,
             'solve_status': self.solve_status,
             'assets_idlst': self.assets_idlst
             }

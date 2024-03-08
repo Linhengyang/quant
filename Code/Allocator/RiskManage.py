@@ -3,7 +3,7 @@
 
 -------------------------------------------------
    File Name:         RiskParity
-   Description :      风险平价：给定各资产波动率，求解波动率平价的portfolio
+   Description :      风险管理: 给定各资产波动率, 求解波动率平价/预算的portfolio
    Author :           linhengyang
    Create date:       2023/12/15
    Latest version:    v1.0.0
@@ -35,8 +35,6 @@ class RiskManage:
     basicPortfSolveRes
     {
         'portf_w': np.ndarray
-        'portf_rtn': np.floating
-        'portf_var': np.floating
         'solve_status': str
         'assets_idlst': list
     }
@@ -232,8 +230,6 @@ class RiskManage:
 
         return {
             "portf_w": self.portf_w,
-            "portf_rtn": self.portf_rtn,
-            "portf_var": self.risk_contribs.sum(),
             "solve_status": self.solve_status,
             'assets_idlst': self.assets_idlst
             }
