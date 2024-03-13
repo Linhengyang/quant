@@ -11,7 +11,8 @@ from Code.projs.asset_allocate.dataLoad import (
     _MKT_DATE_TABLE
     )
 from Code.BackTester.BT_AssetAllocate import (
-    basicBT_multiPeriods
+    basicBT_rtnarr_1prd,
+    BTeval_on_portfrtn
     )
 from Code.projs.asset_allocate.runner import *
 from Code.projs.asset_allocate.inputParser import (
@@ -20,7 +21,7 @@ from Code.projs.asset_allocate.inputParser import (
     get_linear_ratios
     )
 from Code.Utils.Decorator import (
-    tagFunc,
+    tagAttr2T,
     deDilate,
     addAnnual,
     addSTD
@@ -31,17 +32,22 @@ from Code.Utils.Decorator import (
 class riskMngStrat:
     '''
     attributes:
-        1. assets_idlst
-        2. flag
-        3. portf_w_list
-        4. detail_solve_results
+        __inputs
+        __assets_idlst
+        __portf_w_list
+        __details
+        __flag
     
     methods:
-        1. backtest()  get backtest result
+        1. backtest()  get backtest evaluation result
+        2. details     get backtest details of every period
+        3. assets_idlst
+        4. weights     get solver returned weights of every period
+        5. flag        get strategt flag
     '''
 
 
-    __slots__ = ("__inputs", "__assets_idlst", "__flag",  "__portf_w_list", "__detail_solve_results")
+    __slots__ = ("__inputs", "__assets_idlst", "__flag",  "__portf_w_list", "__details")
 
 
 
@@ -52,15 +58,19 @@ class riskMngStrat:
         self.__inputs = inputs
         self.__assets_idlst = []
         self.__portf_w_list = []
-        self.__detail_solve_results = []
+        self.__details = []
         self.__flag = ''
 
 
 
     @addAnnual('rtn', begindate, termidate)
-    @tagFunc('dedilated')
+    @tagAttr2T('dedilated')
     @addSTD('var')
-    def backtest(self) -> dict:
+    def backtest(
+        self,
+        solve_fail: str = 'use-last',
+        cost: Any = None
+        ):
         '''
         de-dilated
             'rtn': np.floating
@@ -73,43 +83,82 @@ class riskMngStrat:
             'drawdown': np.floating
         '''
 
-        train_rtn_mat_list, hold_rtn_mat_list, self.__assets_idlst, constraints, self.__flag,\
-            tgt_contrib_ratio = self._get_riskmng_data_params()
+        train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst, \
+            constraints, self.__flag, tgt_contrib_ratio = self._get_data_params()
         
-        num_assets = len(self.__assets_idlst)
-
-        # 初始化为平均分配
-        self.__portf_w_list, self.__detail_solve_results = \
-            [np.repeat(1/num_assets, num_assets), ], []
-
-        for i, train_rtn_mat in enumerate(train_rtn_mat_list):
-
-            cur_res = self.__solve_single_riskmng(
-                train_rtn_mat,
-                self.__assets_idlst,
-                constraints,
-                tgt_contrib_ratio
-                )
-            cur_res['position_no'] = i + 1
-
-            if cur_res['solve_status'] in ('optimal', ):
-                self.__portf_w_list.append( cur_res['portf_w'] )
-            else:
-                self.__portf_w_list.append( self.__portf_w_list[-1] )
-            
-            self.__detail_solve_results.append(cur_res)
-
         # 在 basicBT_multiPeriods 中，由于涉及到复利累乘，所以需要考虑 1+de-dilated rtn
         # 所以必须在这里传入 de-dilated hold_rtn_mat. 在这之后，BT的结果不需要de-dilate
         hold_rtn_mat_list = [ hold_rtn_mat/dilate for hold_rtn_mat in hold_rtn_mat_list ]
 
-        return basicBT_multiPeriods(self.__portf_w_list[1:], hold_rtn_mat_list)
+        # 初始化为平均分配
+        num_assets = len(assets_idlst)
+        portf_w_list = [np.repeat(1/num_assets, num_assets), ]
+
+        portf_rtn_arr_lst, details = [], []
+
+
+        for i, (train_rtn_mat, hold_rtn_mat, rebal_dates) in enumerate(
+            zip(train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst)
+        ):
+
+            solve_res = self.__solve_portf_1prd(
+                train_rtn_mat,
+                assets_idlst,
+                constraints,
+                tgt_contrib_ratio
+                )
+            
+            if solve_res['solve_status'] in ('optimal'):
+                portf_w = solve_res['portf_w']
+            elif solve_fail == 'use-last':
+                portf_w = portf_w_list[-1]
+            else:
+                raise NotImplementedError(
+                    f'default allocation method for fail-solve is not implemented'
+                    )
+            
+            portf_rtn_arr, early_stop, _ = basicBT_rtnarr_1prd(portf_w, hold_rtn_mat, cost)
+
+            detail = {
+                'position_no': i+1,
+                'assets_idlst': assets_idlst,
+                'solve_status': solve_res['solve_status'],
+                'startdate': str(rebal_dates[0]),
+                'enddate': str(rebal_dates[1]),
+                'portf_w': portf_w,
+                'portf_rtn': np.prod(1+portf_rtn_arr) - 1,
+                'portf_var': np.var(portf_rtn_arr),
+                'portf_std': np.std(portf_rtn_arr)
+            }
+            
+            details.append( detail )
+            portf_w_list.append( portf_w )
+            portf_rtn_arr_lst.append( portf_rtn_arr )
+
+            # if -1 rtn happens in this hold
+            if early_stop:
+                break
+
+        self.__details = details
+        self.__assets_idlst = assets_idlst
+        self.__portf_w_list = portf_w_list[1:]
+
+        # 全周期收益率，并evaluate全周期结果
+        portf_rtn_arr = np.concatenate(portf_rtn_arr_lst)
+
+        return BTeval_on_portfrtn(portf_rtn_arr)
     
+
+
+    @property
+    def details(self) -> list:
+        return self.__details
     
+
+
     @property
     def assets_idlst(self) -> list:
         return self.__assets_idlst
-
 
 
 
@@ -119,26 +168,24 @@ class riskMngStrat:
 
 
 
-
     @property
-    def portf_w_list(self) -> list:
-        return self.__portf_w_list[1:]
+    def weights(self) -> list:
+        return self.__portf_w_list
 
 
 
 
-    @property
-    def detail_solve_results(self) -> list:
-        return self.__detail_solve_results
 
-    def _get_riskmng_data_params(self) -> Any:
+
+    def _get_data_params(self) -> Any:
         '''
         return:
             train_rtn_mat_list: list of ndarray
             hold_rtn_mat_list: list of ndarray
+            rebal_dates_lst: list of ndarray
             assets_idlst: list of str
             constraints: list of ndarray or none
-            mvo_target: str
+            riskmng_target: str
             expt_tgt_value: npfloat
         '''
         assets_info_lst = self.__inputs["assets_info"] # assets_info
@@ -148,7 +195,7 @@ class riskMngStrat:
         tbl_names = list( src_tbl_dict.keys() ) # list of str
         assets_ids = [ src_tbl_dict[tbl] for tbl in tbl_names] # list of lists
 
-        train_rtn_mat_list, hold_rtn_mat_list, assets_idlst = \
+        train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst = \
             get_train_hold_rtn_data(
                 begindate,
                 termidate,
@@ -172,14 +219,14 @@ class riskMngStrat:
         
         constraints = get_constraints( assets_dict, assets_idlst )
 
-        return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, \
-               constraints, riskmng_target, tgt_contrib_ratio
+        return train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst,\
+               assets_idlst, constraints, riskmng_target, tgt_contrib_ratio
     
 
+
+
     @staticmethod
-    @addSTD('portf_var')
-    @deDilate(dilate)
-    def __solve_single_riskmng(
+    def __solve_portf_1prd(
         train_rtn_mat: np.ndarray,
         assets_idlst: t.List[str],
         constraints: t.List[t.Union[np.ndarray, None]],
@@ -195,9 +242,6 @@ class riskMngStrat:
         return:
         de-dilate
             portf_w: np.ndarray
-            portf_rtn: np.floating
-            portf_var: np.floating
-            portf_std: np.floating
             solve_status: str
             assets_idlst: list
         '''
@@ -218,8 +262,6 @@ class riskMngStrat:
 
             res = {
                 'portf_w': np.array([]),
-                'portf_rtn': 0,
-                'portf_var': -dilate,
                 'solve_status': 'FAIL_' + str(e),
                 'assets_idlst': assets_idlst
                 }
@@ -230,7 +272,7 @@ class riskMngStrat:
     def detail_window(self, position_no: int):
         '''
         return every details about one of single position window
-
+        
         "position_no": int, starts from 1
         "train_rtn_mat": np.ndarray
         "constraints": list of None or np.ndarray
@@ -240,15 +282,15 @@ class riskMngStrat:
         "hold_rtn_mat": np.ndarray
         '''
 
-        train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, constraints, flag,\
-            tgt_contrib_ratio = self._get_riskmng_data_params()
+        train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst, \
+            constraints, flag,tgt_contrib_ratio = self._get_data_params()
         
         assert position_no <= len(train_rtn_mat_list), \
             f"position_no must no larger than {len(train_rtn_mat_list)}"
 
         train_rtn_mat = train_rtn_mat_list[position_no-1]
 
-        cur_res = self.__solve_single_riskmng(
+        cur_res = self.__solve_portf_1prd(
             train_rtn_mat,
             assets_idlst,
             constraints,
