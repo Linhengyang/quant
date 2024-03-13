@@ -5,7 +5,7 @@ from functools import wraps
 import numpy as np
 
 
-class tagFunc:
+class tagAttr2T:
     '''
     Tag a function with attribute {attr_name} as True
     '''
