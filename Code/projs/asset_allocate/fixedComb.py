@@ -29,15 +29,19 @@ from Code.Utils.Type import basicPortfSolveRes
 
 class FxdCombStrat:
     '''
-    attributes:
-        1. assets_idlst
-        2. flag
-        3. portf_w_list
-        4. detail_solve_results
-    
+    attributes: 
+        __inputs
+        __assets_idlst
+        __portf_w_list
+        __details
+        __flag
+
     methods:
         1. backtest()  get backtest evaluation result
-        2. 
+        2. details     get backtest details of every period
+        3. assets_idlst
+        4. weights     get solver returned weights of every period
+        5. flag        get strategt flag
     '''
 
 
@@ -65,6 +69,17 @@ class FxdCombStrat:
             solve_fail: str = 'use-last',
             cost: Any = None
             ):
+        '''
+        de-dilated
+            'rtn': np.floating
+            'var': np.floating,
+            'std': np.floating
+            'trade_days': int,
+            'total_cost': float,
+            'gross_rtn': np.floating
+            'annual_rtn': np.floating
+            'drawdown': np.floating
+        '''
 
         # 这里 fixed_weights 可以是None
         train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst,\
@@ -165,6 +180,7 @@ class FxdCombStrat:
         return:
             train_rtn_mat_list: list of ndarray
             hold_rtn_mat_list: list of ndarray
+            rebal_dates_lst: list of ndarray
             assets_idlst: list of str
             fixed_weights: ndarray or None
         '''
@@ -175,7 +191,7 @@ class FxdCombStrat:
         tbl_names = list( src_tbl_dict.keys() ) # list of str
         assets_ids = [ src_tbl_dict[tbl] for tbl in tbl_names] # list of lists
 
-        train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, rebal_dates_lst = \
+        train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst , assets_idlst = \
             get_train_hold_rtn_data(
                 begindate,
                 termidate,
@@ -253,7 +269,7 @@ class FxdCombStrat:
         "hold_rtn_mat": np.ndarray
         '''
 
-        train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, fixed_weights = \
+        train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst, fixed_weights = \
             self._get_data_params()
         
         assert position_no <= len(train_rtn_mat_list), \

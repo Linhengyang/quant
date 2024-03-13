@@ -245,7 +245,7 @@ def get_train_hold_rtn_data(
     assert len(train_rtn_mat_list) == len(hold_rtn_mat_list),\
         'train & hold period mismatch error. Please check code'
     
-    return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, rebal_dates_lst
+    return train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst
 
 
 
