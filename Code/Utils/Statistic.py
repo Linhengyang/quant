@@ -67,7 +67,7 @@ def maxdrawdown(
     elif mode == 'rtnrate':
         init_val = 10000.00
         index_series = (1+series).cumprod() * init_val
-        previous_peaks = index_series.cummax()
+        previous_peaks = np.maximum.accumulate(index_series)
         drawdown = (index_series - previous_peaks)/previous_peaks
 
     return drawdown.min()
