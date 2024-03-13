@@ -80,16 +80,16 @@ def mvopt():
     mvopt_strat = meanvarOptStrat(inputs)
     BT_mvopt = mvopt_strat.backtest()
 
-    bchmk_strat = benchmarkStrat(benchmark)
-    BT_bchmak = bchmk_strat.backtest()
+    # bchmk_strat = benchmarkStrat(benchmark)
+    # BT_bchmak = bchmk_strat.backtest()
 
 
     result = {
-        'details': mvopt_strat.detail_solve_results,
-        'weights': mvopt_strat.portf_w_list,
+        'details': mvopt_strat.details,
+        'weights': mvopt_strat.weights,
         'assets_id': mvopt_strat.assets_idlst,
         'backtest': BT_mvopt,
-        'benchmark': BT_bchmak
+        # 'benchmark': BT_bchmak
     }
 
     
@@ -129,16 +129,16 @@ def riskmanage():
     riskmng_strat = riskMngStrat(inputs)
     BT_riskmng = riskmng_strat.backtest()
 
-    bchmk_strat = benchmarkStrat(benchmark)
-    BT_bchmak = bchmk_strat.backtest()
+    # bchmk_strat = benchmarkStrat(benchmark)
+    # BT_bchmak = bchmk_strat.backtest()
 
 
     result = {
-        'details': riskmng_strat.detail_solve_results,
-        'weights': riskmng_strat.portf_w_list,
+        'details': riskmng_strat.details,
+        'weights': riskmng_strat.weights,
         'assets_id': riskmng_strat.assets_idlst,
         'backtest': BT_riskmng,
-        'benchmark': BT_bchmak
+        # 'benchmark': BT_bchmak
     }
 
     
@@ -177,16 +177,16 @@ def fixedcomb():
     fxdcomb_strat = FxdCombStrat(inputs)
     BT_fxdcomb = fxdcomb_strat.backtest()
 
-    bchmk_strat = benchmarkStrat(benchmark)
-    BT_bchmak = bchmk_strat.backtest()
+    # bchmk_strat = benchmarkStrat(benchmark)
+    # BT_bchmak = bchmk_strat.backtest()
 
 
     result = {
-        'details': fxdcomb_strat.detail_solve_results,
-        'weights': fxdcomb_strat.portf_w_list,
+        'details': fxdcomb_strat.details,
+        'weights': fxdcomb_strat.weights,
         'assets_id': fxdcomb_strat.assets_idlst,
         'backtest': BT_fxdcomb,
-        'benchmark': BT_bchmak
+        # 'benchmark': BT_bchmak
     }
 
     
