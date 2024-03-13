@@ -10,7 +10,6 @@
 -------------------------------------------------
 
 """
-import scipy.optimize as scipyopt
 import typing as t
 from Code.Utils.Type import basicPortfSolveRes
 import numpy as np
@@ -47,8 +46,6 @@ class FixedCombo:
         self.__asset_r_mat = asset_r_mat
         self.__num_assets = asset_r_mat.shape[0] # 资产个数
         
-        self.__fixed_weights = fixed_weights
-
         self.__solve_status: str = "direct" # 初始化求解状态为空字符
         
         if fixed_weights is not None:
@@ -80,6 +77,7 @@ class FixedCombo:
             return self.__portf_rtn
         else:
             return self.__asset_r_mat.mean(axis=1) @ self.__portf_w
+
 
     @property
     def solve_status(self) -> str:
