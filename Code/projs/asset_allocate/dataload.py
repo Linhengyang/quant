@@ -108,7 +108,7 @@ def db_date_data(
         tbl_name: str,
         ) -> np.ndarray:
     '''
-    get recorded dates from startdate to enddate 
+    get recorded dates from startdate to enddate (both included)
     in table tbl_name from database db_info
     '''
     db = DatabaseConnection(db_info)
@@ -210,34 +210,42 @@ def get_train_hold_rtn_data(
         f'market dates with length {len(all_mkt_dates)} \
           and Index return dates {all_rtn_data.shape[1]} mismatch'
     
-    # 从 all_rtn_data 中，取出 begindate到termidate的列
-    rtn_data = all_rtn_data[:, begindate_idx:]
+    # 从 all_rtn_data 中，取出 begindate到termidate的列, 作为持仓期
+    hold_rtn_data = all_rtn_data[:, begindate_idx:]
 
     # 每一期持仓起始，往后持仓gapday天或最后一天
-    strided_slices, _, last_range = strided_slicing_w_residual(
-        rtn_data.shape[1],
+    hold_strided_slices, _, last_range = strided_slicing_w_residual(
+        hold_rtn_data.shape[1],
         gapday,
         gapday
         )
     
-    hold_rtn_mat_list = list(rtn_data.T[strided_slices].transpose(0,2,1))
+    hold_rtn_mat_list = list(hold_rtn_data.T[hold_strided_slices].transpose(0,2,1))
 
-    if list(last_range): # rsd_range不为空
-        hold_rtn_mat_list.append( rtn_data.T[last_range].T )
+    if list(last_range): # 下一次 stride 之后到termedate之前仍有日期
+        hold_rtn_mat_list.append( hold_rtn_data.T[last_range].T )
     
+    # 从 all date 中，取出 begindate到termidate(均包含), 作为持仓日期
+    hold_dates = all_mkt_dates[begindate_idx:]
+    hold_dates_mat = hold_dates[hold_strided_slices]# 2-d array of int
+    rebal_dates_lst = list( hold_dates_mat[:, [0, -1]] )
+
+    if list(last_range): # 下一次 stride 之后到termedate之前仍有日期
+        rebal_dates_lst.append( hold_dates[last_range][[0, -1]] )
+
     # 每一期调仓日期起始，往前回溯back_window_size天。调仓日期在持仓日之前
-    strided_slices, _, _ = strided_slicing_w_residual(
+    train_strided_slices, _, _ = strided_slicing_w_residual(
         all_rtn_data.shape[1]-1,
         back_window_size,
         gapday
         )
-
-    train_rtn_mat_list = list(all_rtn_data.T[strided_slices].transpose(0,2,1))
+    
+    train_rtn_mat_list = list(all_rtn_data.T[train_strided_slices].transpose(0,2,1))
 
     assert len(train_rtn_mat_list) == len(hold_rtn_mat_list),\
         'train & hold period mismatch error. Please check code'
-
-    return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst
+    
+    return train_rtn_mat_list, hold_rtn_mat_list, assets_idlst, rebal_dates_lst
 
 
 
