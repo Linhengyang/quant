@@ -29,9 +29,7 @@ class FixedCombo:
 
     __slots__ = ("assets_idlst",
                 "__solve_status", "__portf_w", "__portf_var", "__portf_rtn", 
-                "__asset_r_mat", "__cov_mat", "__category_mat", "__tgt_contrib_ratio",
-                "__low_constraints", "__high_constraints",
-                "__num_risk", "__num_assets",)
+                "__asset_r_mat", "__num_assets",)
     
 
     def __init__(
