@@ -58,10 +58,7 @@ class FixedCombo:
     
     @property
     def portf_var(self) -> np.floating:
-        if self.__portf_var != np.float32(-1):
-            return self.__portf_var
-        else:
-            return self.__portf_w @ np.cov(self.__asset_r_mat) @ self.__portf_w
+        return self.__portf_w @ np.cov(self.__asset_r_mat) @ self.__portf_w
     
 
     @property
@@ -71,10 +68,7 @@ class FixedCombo:
 
     @property
     def portf_rtn(self) -> np.floating:
-        if self.__portf_rtn != np.float32(0):
-            return self.__portf_rtn
-        else:
-            return self.__asset_r_mat.mean(axis=1) @ self.__portf_w
+        return self.__asset_r_mat.mean(axis=1) @ self.__portf_w
 
 
     @property
