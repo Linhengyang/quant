@@ -21,4 +21,4 @@ class basicBackTestRes(TypedDict):
     trade_days: int
     total_cost: np.floating
     gross_rtn: np.floating
-
+    drawdown: np.floating
