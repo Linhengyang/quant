@@ -19,11 +19,11 @@ inputs = {
         #   "equi_wght_vec":[0.1, 0.3, 0.2, 0.15, 0.25],
         #   "tau":0.05,
           "mvo_target":"maxReturn", # minWave: get min var from given r; maxReturn: get max r from given var; sharp: max shap ratio
-          "expt_tgt_value":0.3,
+          "expt_tgt_value":0.4,
           "rtn_dilate":100,
           "begindate":"20230301",
-          "termidate":"20230525",
-          "gapday":10,
+          "termidate":"20230725",
+          "gapday":20,
           "back_window_size":30,
           "benchmark":"CSI800",
           "assets_info":[
@@ -70,6 +70,6 @@ inputs = {
           ]
           }
 # r = requests.post("http://127.0.0.1:8000/asset_allocate/mean_var_opt", json=inputs) # post data
-# r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
-r = requests.post("http://127.0.0.1:8000/asset_allocate/fixed_combination", json=inputs) # post data
+r = requests.post("http://127.0.0.1:8000/asset_allocate/risk_manage", json=inputs) # post data
+# r = requests.post("http://127.0.0.1:8000/asset_allocate/fixed_combination", json=inputs) # post data
 print(r.text)

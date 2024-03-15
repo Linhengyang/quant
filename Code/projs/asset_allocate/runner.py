@@ -24,6 +24,8 @@ __all__ = [
 ]
 
 
+test_mode = False
+
 def release2global(inputs: Any) -> None:
 
     # 持仓起始日，持仓终结日，膨胀系数, 调仓周期, 基准代号, 回看窗口天数
@@ -66,7 +68,10 @@ def mvopt():
             'gross_rtn':, 'annual_rtn':},
     }
     '''
-
+    if test_mode:
+        from Test.test_result import test_res
+        return test_res
+    
     inputs = request.json
 
     release2global(inputs)
@@ -124,7 +129,10 @@ def riskmanage():
             'gross_rtn':, 'annual_rtn':},
     }
     '''
-
+    if test_mode:
+        from Test.test_result import test_res
+        return test_res
+    
     inputs = request.json
 
     release2global(inputs)
@@ -182,7 +190,10 @@ def fixedcomb():
             'gross_rtn':, 'annual_rtn':},
     }
     '''
-
+    if test_mode:
+        from Test.test_result import test_res
+        return test_res
+    
     inputs = request.json
 
     release2global(inputs)
