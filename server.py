@@ -40,5 +40,4 @@ asset_allocate_app.register_blueprint(fxdcomb_api)
 
 
 if __name__ == "__main__":
-    np.random.seed(100)
     asset_allocate_app.run(port=8000, debug=True)
