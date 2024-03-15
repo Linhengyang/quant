@@ -2,14 +2,18 @@ from Code.projs.asset_allocate.dataLoad import(
     get_benchmark_rtn_data,
     _DB
     )
-from Code.BackTester.BT_AssetAllocate import basicBT_multiPeriods
+from Code.Allocator.FixedCombine import FixedCombo
+from Code.BackTester.BT_AssetAllocate import (
+    BTeval_on_portfrtn,
+    day_portfw_on_period
+)
+from Code.Utils.Sequence import strided_slicing_w_residual
 from Code.projs.asset_allocate.runner import *
 from Code.Utils.Decorator import (
-    tagFunc,
+    tagAttr2T,
     addAnnual,
     addSTD
     )
-import traceback
 import numpy as np
 import typing as t
 import sys
@@ -20,15 +24,20 @@ sys.dont_write_bytecode = True
 class benchmarkStrat:
     '''
     attributes:
-        1. assets_idlst
-        2. flag
-        3. portf_w_list
+        __assets_idlst
+        __flag
+        __portf_w_list
+        __details
     
     methods:
-        1. backtest()  get backtest result
+        1. backtest()  get backtest evaluation result
+        2. details     get backtest details of every period
+        3. assets_idlst
+        4. weights     get solver returned weights of every period
+        5. flag        get strategt flag
     '''
 
-    __slots__ = ("__assets_idlst", "__flag", "__portf_w_list")
+    __slots__ = ("__assets_idlst", "__flag", "__portf_w_list", "__details")
 
 
     _BENCHMARK_WEIGHTS = {
@@ -64,13 +73,17 @@ class benchmarkStrat:
         self.__flag = benchmark
         self.__assets_idlst = []
         self.__portf_w_list = []
+        self.__details = []
 
     
 
     @addAnnual('rtn', begindate, termidate)
-    @tagFunc('dedilated')
+    @tagAttr2T('dedilated')
     @addSTD('var')
-    def backtest(self) -> dict:
+    def backtest(
+        self,
+        cost: t.Any = None
+        ) -> dict:
         '''
         de-dilated
             'rtn': np.float32
@@ -85,7 +98,7 @@ class benchmarkStrat:
 
         assets_ids, tbl_names, rebal_gapday = self.parse_benchmark(self.__flag)
 
-        hold_rtn_mat_list, self.__assets_idlst = get_benchmark_rtn_data(
+        bchmk_rtn_mat_list, self.__assets_idlst = get_benchmark_rtn_data(
             begindate,
             termidate,
             assets_ids,
@@ -96,30 +109,76 @@ class benchmarkStrat:
         
         weights = [ self._BENCHMARK_WEIGHTS[benchmark][asset] for asset in self.__assets_idlst ]
 
-        num_assets = hold_rtn_mat_list[0].shape[0]
-
+        num_assets = bchmk_rtn_mat_list[0].shape[0]
         assert num_assets == len(weights),\
             "hold_rtn_mat axis 0 length must match with weights"
 
-        num_hold_periods = len(hold_rtn_mat_list) # 持仓期数
+        # 先求出 benchmark 在全周期的日收益率序列，然后按照 策略的 slice切开, 才能对齐period
+        # 初始化
+        bchmk_rtn_arr_lst, bchmk_w  = [], np.array(weights)
 
-        self.__portf_w_list = [np.array(weights), ] * num_hold_periods
+        num_hold_periods = len(bchmk_rtn_mat_list) # 持仓期数
+        self.__portf_w_list = [bchmk_w, ] * num_hold_periods
 
-        return basicBT_multiPeriods(self.__portf_w_list, hold_rtn_mat_list)
+        for bchmk_rtn_mat in bchmk_rtn_mat_list:
+
+            # benchmark 不作 early stop, 即不作原始本金假设，发生 -1 的rtn也无所谓
+            w_mat = day_portfw_on_period(bchmk_w, bchmk_rtn_mat)
+
+            bchmk_rtn_arr = (w_mat * bchmk_rtn_mat).sum(axis=0)
+            
+            bchmk_rtn_arr_lst.append( bchmk_rtn_arr )
+
+
+        # 全周期收益率
+        bchmk_rtn_arr = np.concatenate(bchmk_rtn_arr_lst)
+
+        # 切分 portf_rtn_arr
+        # 每一期持仓起始，往后持仓gapday天或最后一天
+        hold_strided_slices, _, last_range = strided_slicing_w_residual(
+            len(bchmk_rtn_arr),
+            gapday,
+            gapday
+            )
+
+        hold_bchmk_rtn_arr_lst = list( bchmk_rtn_arr[hold_strided_slices] )
+
+        if list(last_range):
+            hold_bchmk_rtn_arr_lst.append( bchmk_rtn_arr[last_range] )
+        
+        details = []
+        for i, hold_bchmk_rtn_arr in enumerate(hold_bchmk_rtn_arr_lst):
+            detail = {
+                'position_no': i+1,
+                'bchmk_rtn': np.prod(1+hold_bchmk_rtn_arr) - 1,
+                'bchmk_var': np.var(hold_bchmk_rtn_arr),
+                'bchmk_std': np.std(hold_bchmk_rtn_arr),
+            }
+
+            details.append( detail )
+
+        self.__details = details
+
+        return BTeval_on_portfrtn(bchmk_rtn_arr)
     
-    
+
     @property
-    def assets_idlst(self):
+    def details(self) -> list:
+        return self.__details
+
+
+    @property
+    def assets_idlst(self) -> list:
         return self.__assets_idlst
 
 
     @property
-    def portf_w_list(self):
+    def weights(self) -> list:
         return self.__portf_w_list
 
 
     @property
-    def flag(self):
+    def flag(self) -> str:
         return self.__flag
     
 
@@ -160,39 +219,3 @@ class benchmarkStrat:
                 f"wrong code {benchmark} for benchmark"
                 )
         return assets_ids, tbl_names, rebal_gapday
-    
-
-    @staticmethod
-    @addSTD('bchmk_var')
-    def __solve_single_bchmk_hold(
-        hold_rtn_mat: np.ndarray,
-        assets_idlst: t.List[str],
-        fixed_weights: np.ndarray
-        ) -> t.Any:
-        '''
-        input:
-            hold_rtn_mat_list: np.ndarray,
-            assets_idlst: t.List[str],
-            fixed_weights: np.ndarray
-        return:
-        de-dilate
-            bchmk_w: np.ndarray
-            bchmk_rtn: np.floating
-            bchmk_var: np.floating
-            bchmk_std: np.floating
-            assets_idlst: list
-        '''
-
-        try:            
-            res = {
-                'bchmk_w': fixed_weights,
-                'bchmk_rtn': hold_rtn_mat.mean(axis=1) @ fixed_weights,
-                'bchmk_var': fixed_weights @ np.cov(hold_rtn_mat) @ fixed_weights,
-                'assets_idlst': assets_idlst
-                }
-            
-        except Exception as e:
-            traceback.print_exc()
-            raise 
-        
-        return res
