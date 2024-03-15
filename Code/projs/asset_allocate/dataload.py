@@ -295,7 +295,7 @@ def get_benchmark_rtn_data(
         tbl_names,
         db_dict
         )
-
+    
     # 每gapday持仓
     # 当前，月度持仓精简为每20天持仓
     if rebal_gapday: # 若参数输入了rebal_gapday且不为0, 那么以 rebal_gapday作为gapday调仓

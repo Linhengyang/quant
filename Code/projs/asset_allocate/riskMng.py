@@ -81,6 +81,7 @@ class riskMngStrat:
             'gross_rtn': np.floating
             'annual_rtn': np.floating
             'drawdown': np.floating
+            'rtn_series': np.ndarray
         '''
 
         train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst, \
@@ -127,6 +128,7 @@ class riskMngStrat:
                 'enddate': str(rebal_dates[1]),
                 'portf_w': portf_w,
                 'portf_rtn': np.prod(1+portf_rtn_arr) - 1,
+                'portf_rtn_series': portf_rtn_arr,
                 'portf_var': np.var(portf_rtn_arr),
                 'portf_std': np.std(portf_rtn_arr)
             }

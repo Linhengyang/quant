@@ -151,7 +151,8 @@ def BTeval_on_portfrtn(
         'trade_days': trade_days,
         'total_cost': total_cost,
         'gross_rtn': gross_rtn,
-        'drawdown': maxdd
+        'drawdown': maxdd,
+        'rtn_series': np.ndarray
         }
     '''
     trade_days = len(portf_rtn_arr)
@@ -185,7 +186,8 @@ def BTeval_on_portfrtn(
         'trade_days': trade_days,
         'total_cost': total_cost,
         'gross_rtn': gross_rtn,
-        'drawdown': maxdd
+        'drawdown': maxdd,
+        'rtn_series': portf_rtn_arr
         }
 
 
@@ -213,6 +215,7 @@ def basicBT_eval_Nprd(
             total_cost: np.floating
             gross_rtn: np.floating
             drawdown: np.floating
+            rtn_series: np.ndarray
     '''
 
     assert len(portf_w_lst) == len(hold_rtn_mat_lst),\
