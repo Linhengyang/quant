@@ -228,6 +228,8 @@ def get_train_hold_rtn_data(
     # 从 all date 中，取出 begindate到termidate(均包含), 作为持仓日期
     hold_dates = all_mkt_dates[begindate_idx:]
     hold_dates_mat = hold_dates[hold_strided_slices]# 2-d array of int
+    
+     # 取出第一列和最后一列，作为每个持仓小期的startdate和enddate
     rebal_dates_lst = list( hold_dates_mat[:, [0, -1]] )
 
     if list(last_range): # 下一次 stride 之后到termedate之前仍有日期
