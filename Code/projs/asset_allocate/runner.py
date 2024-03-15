@@ -64,8 +64,6 @@ def mvopt():
         'benchmark':
             {'rtn', 'var', 'std', 'trade_days':, 'total_cost':,
             'gross_rtn':, 'annual_rtn':},
-        'excess':
-            {'rtn':, 'annual_rtn':}
     }
     '''
 
@@ -80,16 +78,27 @@ def mvopt():
     mvopt_strat = meanvarOptStrat(inputs)
     BT_mvopt = mvopt_strat.backtest()
 
-    # bchmk_strat = benchmarkStrat(benchmark)
-    # BT_bchmak = bchmk_strat.backtest()
+    bchmk_strat = benchmarkStrat(benchmark)
+    BT_bchmk = bchmk_strat.backtest()
 
+    details = []
+    for strat_detail, bchmk_detail in zip(mvopt_strat.details, bchmk_strat.details):
+        assert strat_detail['position_no'] == bchmk_detail['position_no'], \
+            f"position number not match on strategy {strat_detail['position_no']}"
+
+        strat_detail['bchmk_rtn'] = bchmk_detail['bchmk_rtn']
+        strat_detail['bchmk_std'] = bchmk_detail['bchmk_std']
+        strat_detail['bchmk_var'] = bchmk_detail['bchmk_var']
+        strat_detail['execs_rtn'] = strat_detail['portf_rtn'] - bchmk_detail['bchmk_rtn']
+
+        details.append( strat_detail )
 
     result = {
-        'details': mvopt_strat.details,
+        'details': details,
         'weights': mvopt_strat.weights,
         'assets_id': mvopt_strat.assets_idlst,
         'backtest': BT_mvopt,
-        # 'benchmark': BT_bchmak
+        'benchmark': BT_bchmk
     }
 
     
@@ -113,8 +122,6 @@ def riskmanage():
         'benchmark':
             {'rtn', 'var', 'std', 'trade_days':, 'total_cost':,
             'gross_rtn':, 'annual_rtn':},
-        'excess':
-            {'rtn':, 'annual_rtn':}
     }
     '''
 
@@ -129,16 +136,28 @@ def riskmanage():
     riskmng_strat = riskMngStrat(inputs)
     BT_riskmng = riskmng_strat.backtest()
 
-    # bchmk_strat = benchmarkStrat(benchmark)
-    # BT_bchmak = bchmk_strat.backtest()
+    bchmk_strat = benchmarkStrat(benchmark)
+    BT_bchmk = bchmk_strat.backtest()
 
+
+    details = []
+    for strat_detail, bchmk_detail in zip(riskmng_strat.details, bchmk_strat.details):
+        assert strat_detail['position_no'] == bchmk_detail['position_no'], \
+            f"position number not match on strategy {strat_detail['position_no']}"
+
+        strat_detail['bchmk_rtn'] = bchmk_detail['bchmk_rtn']
+        strat_detail['bchmk_std'] = bchmk_detail['bchmk_std']
+        strat_detail['bchmk_var'] = bchmk_detail['bchmk_var']
+        strat_detail['execs_rtn'] = strat_detail['portf_rtn'] - bchmk_detail['bchmk_rtn']
+
+        details.append( strat_detail )
 
     result = {
-        'details': riskmng_strat.details,
+        'details': details,
         'weights': riskmng_strat.weights,
         'assets_id': riskmng_strat.assets_idlst,
         'backtest': BT_riskmng,
-        # 'benchmark': BT_bchmak
+        'benchmark': BT_bchmk
     }
 
     
@@ -161,8 +180,6 @@ def fixedcomb():
         'benchmark':
             {'rtn', 'var', 'std', 'trade_days':, 'total_cost':,
             'gross_rtn':, 'annual_rtn':},
-        'excess':
-            {'rtn':, 'annual_rtn':}
     }
     '''
 
@@ -177,16 +194,28 @@ def fixedcomb():
     fxdcomb_strat = FxdCombStrat(inputs)
     BT_fxdcomb = fxdcomb_strat.backtest()
 
-    # bchmk_strat = benchmarkStrat(benchmark)
-    # BT_bchmak = bchmk_strat.backtest()
+    bchmk_strat = benchmarkStrat(benchmark)
+    BT_bchmk = bchmk_strat.backtest()
 
+
+    details = []
+    for strat_detail, bchmk_detail in zip(fxdcomb_strat.details, bchmk_strat.details):
+        assert strat_detail['position_no'] == bchmk_detail['position_no'], \
+            f"position number not match on strategy {strat_detail['position_no']}"
+
+        strat_detail['bchmk_rtn'] = bchmk_detail['bchmk_rtn']
+        strat_detail['bchmk_std'] = bchmk_detail['bchmk_std']
+        strat_detail['bchmk_var'] = bchmk_detail['bchmk_var']
+        strat_detail['execs_rtn'] = strat_detail['portf_rtn'] - bchmk_detail['bchmk_rtn']
+
+        details.append( strat_detail )
 
     result = {
-        'details': fxdcomb_strat.details,
+        'details': details,
         'weights': fxdcomb_strat.weights,
         'assets_id': fxdcomb_strat.assets_idlst,
         'backtest': BT_fxdcomb,
-        # 'benchmark': BT_bchmak
+        'benchmark': BT_bchmk
     }
 
     
