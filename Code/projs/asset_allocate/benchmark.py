@@ -153,6 +153,7 @@ class benchmarkStrat:
                 'bchmk_rtn': np.prod(1+hold_bchmk_rtn_arr) - 1,
                 'bchmk_var': np.var(hold_bchmk_rtn_arr),
                 'bchmk_std': np.std(hold_bchmk_rtn_arr),
+                'bchmk_rtn_series': hold_bchmk_rtn_arr
             }
 
             details.append( detail )

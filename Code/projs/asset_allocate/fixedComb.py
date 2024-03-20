@@ -79,7 +79,6 @@ class FxdCombStrat:
             'gross_rtn': np.floating
             'annual_rtn': np.floating
             'drawdown': np.floating
-            'rtn_series': np.ndarray
         '''
 
         # 这里 fixed_weights 可以是None

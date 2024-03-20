@@ -92,6 +92,7 @@ def mvopt():
             f"position number not match on strategy {strat_detail['position_no']}"
 
         strat_detail['bchmk_rtn'] = bchmk_detail['bchmk_rtn']
+        strat_detail['bchmk_rtn_series'] = bchmk_detail['bchmk_rtn_series']
         strat_detail['bchmk_std'] = bchmk_detail['bchmk_std']
         strat_detail['bchmk_var'] = bchmk_detail['bchmk_var']
         strat_detail['execs_rtn'] = strat_detail['portf_rtn'] - bchmk_detail['bchmk_rtn']
@@ -154,6 +155,7 @@ def riskmanage():
             f"position number not match on strategy {strat_detail['position_no']}"
 
         strat_detail['bchmk_rtn'] = bchmk_detail['bchmk_rtn']
+        strat_detail['bchmk_rtn_series'] = bchmk_detail['bchmk_rtn_series']
         strat_detail['bchmk_std'] = bchmk_detail['bchmk_std']
         strat_detail['bchmk_var'] = bchmk_detail['bchmk_var']
         strat_detail['execs_rtn'] = strat_detail['portf_rtn'] - bchmk_detail['bchmk_rtn']
@@ -215,6 +217,7 @@ def fixedcomb():
             f"position number not match on strategy {strat_detail['position_no']}"
 
         strat_detail['bchmk_rtn'] = bchmk_detail['bchmk_rtn']
+        strat_detail['bchmk_rtn_series'] = bchmk_detail['bchmk_rtn_series']
         strat_detail['bchmk_std'] = bchmk_detail['bchmk_std']
         strat_detail['bchmk_var'] = bchmk_detail['bchmk_var']
         strat_detail['execs_rtn'] = strat_detail['portf_rtn'] - bchmk_detail['bchmk_rtn']
