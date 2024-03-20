@@ -23,4 +23,3 @@ class basicBackTestRes(TypedDict):
     total_cost: np.floating
     gross_rtn: np.floating
     drawdown: np.floating
-    rtn_series: np.ndarray
