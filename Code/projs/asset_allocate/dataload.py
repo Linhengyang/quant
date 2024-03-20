@@ -226,14 +226,14 @@ def get_train_hold_rtn_data(
         hold_rtn_mat_list.append( hold_rtn_data.T[last_range].T )
     
     # 从 all date 中，取出 begindate到termidate(均包含), 作为持仓日期
-    hold_dates = all_mkt_dates[begindate_idx:]
-    hold_dates_mat = hold_dates[hold_strided_slices]# 2-d array of int
+    hold_dates = all_mkt_dates[begindate_idx:] # 1-d array of int
+    # 根据gapday分割成2-d array of int
+    hold_dates_mat = hold_dates[hold_strided_slices]
     
-     # 取出第一列和最后一列，作为每个持仓小期的startdate和enddate
-    rebal_dates_lst = list( hold_dates_mat[:, [0, -1]] )
+    hold_dates_lst = list( hold_dates_mat )
 
     if list(last_range): # 下一次 stride 之后到termedate之前仍有日期
-        rebal_dates_lst.append( hold_dates[last_range][[0, -1]] )
+        hold_dates_lst.append( hold_dates[last_range] )
 
     # 每一期调仓日期起始，往前回溯back_window_size天。调仓日期在持仓日之前
     train_strided_slices, _, _ = strided_slicing_w_residual(
@@ -247,7 +247,7 @@ def get_train_hold_rtn_data(
     assert len(train_rtn_mat_list) == len(hold_rtn_mat_list),\
         'train & hold period mismatch error. Please check code'
     
-    return train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst
+    return train_rtn_mat_list, hold_rtn_mat_list, hold_dates_lst, assets_idlst
 
 
 
