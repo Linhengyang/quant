@@ -80,10 +80,9 @@ class meanvarOptStrat:
             'gross_rtn': np.floating
             'annual_rtn': np.floating
             'drawdown': np.floating
-            'rtn_series': np.ndarray
         '''
 
-        train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst, \
+        train_rtn_mat_list, hold_rtn_mat_list, hold_dates_lst, assets_idlst, \
             constraints, self.__flag, expt_tgt_value = self._get_data_params()
         
         # 在 回测过程 中，由于涉及到复利累乘，所以需要考虑 1+de-dilated rtn
@@ -96,8 +95,8 @@ class meanvarOptStrat:
 
         portf_rtn_arr_lst, details = [], []
 
-        for i, (train_rtn_mat, hold_rtn_mat, rebal_dates) in enumerate(
-            zip(train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst)
+        for i, (train_rtn_mat, hold_rtn_mat, hold_dates) in enumerate(
+            zip(train_rtn_mat_list, hold_rtn_mat_list, hold_dates_lst)
         ):
 
             solve_res = self.__solve_portf_1prd(
@@ -123,8 +122,7 @@ class meanvarOptStrat:
                 'position_no': i+1,
                 'assets_idlst': assets_idlst,
                 'solve_status': solve_res['solve_status'],
-                'startdate': str(rebal_dates[0]),
-                'enddate': str(rebal_dates[1]),
+                'hold_dates': hold_dates,
                 'portf_w': portf_w,
                 'portf_rtn': np.prod(1+portf_rtn_arr) - 1,
                 'portf_rtn_series': portf_rtn_arr,
@@ -203,7 +201,7 @@ class meanvarOptStrat:
         tbl_names = list( src_tbl_dict.keys() ) # list of str
         assets_ids = [ src_tbl_dict[tbl] for tbl in tbl_names] # list of lists
 
-        train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, assets_idlst = \
+        train_rtn_mat_list, hold_rtn_mat_list, hold_dates_lst, assets_idlst = \
             get_train_hold_rtn_data(
                 begindate,
                 termidate,
@@ -218,7 +216,7 @@ class meanvarOptStrat:
         
         constraints = get_constraints( assets_dict, assets_idlst )
 
-        return train_rtn_mat_list, hold_rtn_mat_list, rebal_dates_lst, \
+        return train_rtn_mat_list, hold_rtn_mat_list, hold_dates_lst, \
                assets_idlst, constraints, mvo_target, expt_tgt_value
 
 
