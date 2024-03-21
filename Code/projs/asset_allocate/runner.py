@@ -3,6 +3,12 @@ from operator import itemgetter
 from flask import request, Blueprint
 from typing import Any
 from Code.Utils.Decorator import serialize
+from Code.projs.asset_allocate.functions import (
+    cal_rtn_intervals,
+    cal_rtn_years
+)
+
+import numpy as np
 
 warnings.filterwarnings('ignore')
 app_name = __name__
@@ -80,14 +86,15 @@ def mvopt():
     from Code.projs.asset_allocate.benchmark import benchmarkStrat
     from Code.projs.asset_allocate.meanvarOpt import meanvarOptStrat
 
-    mvopt_strat = meanvarOptStrat(inputs)
-    BT_mvopt = mvopt_strat.backtest()
+    stratg = meanvarOptStrat(inputs)
+    BT_stratg = stratg.backtest()
 
-    bchmk_strat = benchmarkStrat(benchmark)
-    BT_bchmk = bchmk_strat.backtest()
+    bchmk = benchmarkStrat(benchmark)
+    BT_bchmk = bchmk.backtest()
 
-    details = []
-    for strat_detail, bchmk_detail in zip(mvopt_strat.details, bchmk_strat.details):
+
+    details, hold_dates_lst, portf_rtn_series_lst, bchmk_rtn_series_lst = [], [], [], []
+    for strat_detail, bchmk_detail in zip(stratg.details, bchmk.details):
         assert strat_detail['position_no'] == bchmk_detail['position_no'], \
             f"position number not match on strategy {strat_detail['position_no']}"
 
@@ -99,12 +106,23 @@ def mvopt():
 
         details.append( strat_detail )
 
+        hold_dates_lst.append( strat_detail['hold_dates'] )
+        portf_rtn_series_lst.append( strat_detail['portf_rtn_series'] )
+        bchmk_rtn_series_lst.append( strat_detail['bchmk_rtn_series'] )
+
+
+    hold_dates_arr = np.concatenate(hold_dates_lst)
+    portf_rtn_arr = np.concatenate(portf_rtn_series_lst)
+    bchmk_rtn_arr = np.concatenate(bchmk_rtn_series_lst)
+
     result = {
         'details': details,
-        'weights': mvopt_strat.weights,
-        'assets_id': mvopt_strat.assets_idlst,
-        'backtest': BT_mvopt,
-        'benchmark': BT_bchmk
+        'weights': stratg.weights,
+        'assets_id': stratg.assets_idlst,
+        'backtest': BT_stratg,
+        'benchmark': BT_bchmk,
+        'intervals': cal_rtn_intervals(hold_dates_arr, portf_rtn_arr, bchmk_rtn_arr, termidate),
+        'years':cal_rtn_years(hold_dates_arr, portf_rtn_arr, bchmk_rtn_arr)
     }
 
     
@@ -142,15 +160,15 @@ def riskmanage():
     from Code.projs.asset_allocate.benchmark import benchmarkStrat
     from Code.projs.asset_allocate.riskMng import riskMngStrat
 
-    riskmng_strat = riskMngStrat(inputs)
-    BT_riskmng = riskmng_strat.backtest()
+    stratg = riskMngStrat(inputs)
+    BT_stratg = stratg.backtest()
 
-    bchmk_strat = benchmarkStrat(benchmark)
-    BT_bchmk = bchmk_strat.backtest()
+    bchmk = benchmarkStrat(benchmark)
+    BT_bchmk = bchmk.backtest()
 
 
-    details = []
-    for strat_detail, bchmk_detail in zip(riskmng_strat.details, bchmk_strat.details):
+    details, hold_dates_lst, portf_rtn_series_lst, bchmk_rtn_series_lst = [], [], [], []
+    for strat_detail, bchmk_detail in zip(stratg.details, bchmk.details):
         assert strat_detail['position_no'] == bchmk_detail['position_no'], \
             f"position number not match on strategy {strat_detail['position_no']}"
 
@@ -162,12 +180,23 @@ def riskmanage():
 
         details.append( strat_detail )
 
+        hold_dates_lst.append( strat_detail['hold_dates'] )
+        portf_rtn_series_lst.append( strat_detail['portf_rtn_series'] )
+        bchmk_rtn_series_lst.append( strat_detail['bchmk_rtn_series'] )
+
+
+    hold_dates_arr = np.concatenate(hold_dates_lst)
+    portf_rtn_arr = np.concatenate(portf_rtn_series_lst)
+    bchmk_rtn_arr = np.concatenate(bchmk_rtn_series_lst)
+
     result = {
         'details': details,
-        'weights': riskmng_strat.weights,
-        'assets_id': riskmng_strat.assets_idlst,
-        'backtest': BT_riskmng,
-        'benchmark': BT_bchmk
+        'weights': stratg.weights,
+        'assets_id': stratg.assets_idlst,
+        'backtest': BT_stratg,
+        'benchmark': BT_bchmk,
+        'intervals': cal_rtn_intervals(hold_dates_arr, portf_rtn_arr, bchmk_rtn_arr, termidate),
+        'years':cal_rtn_years(hold_dates_arr, portf_rtn_arr, bchmk_rtn_arr)
     }
 
     
@@ -204,15 +233,15 @@ def fixedcomb():
     from Code.projs.asset_allocate.benchmark import benchmarkStrat
     from Code.projs.asset_allocate.fixedComb import FxdCombStrat
 
-    fxdcomb_strat = FxdCombStrat(inputs)
-    BT_fxdcomb = fxdcomb_strat.backtest()
+    stratg = FxdCombStrat(inputs)
+    BT_stratg = stratg.backtest()
 
-    bchmk_strat = benchmarkStrat(benchmark)
-    BT_bchmk = bchmk_strat.backtest()
+    bchmk = benchmarkStrat(benchmark)
+    BT_bchmk = bchmk.backtest()
 
 
-    details = []
-    for strat_detail, bchmk_detail in zip(fxdcomb_strat.details, bchmk_strat.details):
+    details, hold_dates_lst, portf_rtn_series_lst, bchmk_rtn_series_lst = [], [], [], []
+    for strat_detail, bchmk_detail in zip(stratg.details, bchmk.details):
         assert strat_detail['position_no'] == bchmk_detail['position_no'], \
             f"position number not match on strategy {strat_detail['position_no']}"
 
@@ -224,12 +253,23 @@ def fixedcomb():
 
         details.append( strat_detail )
 
+        hold_dates_lst.append( strat_detail['hold_dates'] )
+        portf_rtn_series_lst.append( strat_detail['portf_rtn_series'] )
+        bchmk_rtn_series_lst.append( strat_detail['bchmk_rtn_series'] )
+
+
+    hold_dates_arr = np.concatenate(hold_dates_lst)
+    portf_rtn_arr = np.concatenate(portf_rtn_series_lst)
+    bchmk_rtn_arr = np.concatenate(bchmk_rtn_series_lst)
+
     result = {
         'details': details,
-        'weights': fxdcomb_strat.weights,
-        'assets_id': fxdcomb_strat.assets_idlst,
-        'backtest': BT_fxdcomb,
-        'benchmark': BT_bchmk
+        'weights': stratg.weights,
+        'assets_id': stratg.assets_idlst,
+        'backtest': BT_stratg,
+        'benchmark': BT_bchmk,
+        'intervals': cal_rtn_intervals(hold_dates_arr, portf_rtn_arr, bchmk_rtn_arr, termidate),
+        'years':cal_rtn_years(hold_dates_arr, portf_rtn_arr, bchmk_rtn_arr)
     }
 
     
