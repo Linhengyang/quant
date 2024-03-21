@@ -205,6 +205,8 @@ def serialize(result):
             result = float(result)
         elif isinstance(result, np.ndarray):
             result = result.tolist()
+        elif isinstance(result, np.integer):
+            result = int(result)
 
 
     return result
