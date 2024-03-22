@@ -22,9 +22,9 @@ from Code.projs.asset_allocate.inputParser import (
     )
 from Code.Utils.Decorator import (
     tagAttr2T,
-    deDilate,
     addAnnual,
-    addSTD
+    addSTD,
+    addSharpe
     )
 
 
@@ -62,7 +62,7 @@ class riskMngStrat:
         self.__flag = ''
 
 
-
+    @addSharpe(0.02, 'annual_rtn', 'var')
     @addAnnual('rtn', begindate, termidate)
     @tagAttr2T('dedilated')
     @addSTD('var')

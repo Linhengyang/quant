@@ -21,7 +21,8 @@ from Code.projs.asset_allocate.inputParser import (
 from Code.Utils.Decorator import (
     tagAttr2T,
     addAnnual,
-    addSTD
+    addSTD,
+    addSharpe
     )
 from Code.Utils.Type import basicPortfSolveRes
 
@@ -60,7 +61,7 @@ class FxdCombStrat:
         self.__flag = 'fixed_comb'
 
     
-
+    @addSharpe(0.02, 'annual_rtn', 'var')
     @addAnnual('rtn', begindate, termidate)
     @tagAttr2T('dedilated')
     @addSTD('var')
