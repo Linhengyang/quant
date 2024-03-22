@@ -131,7 +131,7 @@ class addSTD:
 
             # 添加 suffix_std 项
             std_argname = self.__var_argname.replace('var', 'std')
-            std = np.sqrt( bt_res[self.__var_argname] )
+            std = np.sqrt( bt_res[self.__var_argname] ) * np.sqrt(252)
             if np.isnan(std):
                 bt_res[std_argname] = np.float32(-1)
             else:
