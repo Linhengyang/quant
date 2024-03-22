@@ -40,4 +40,4 @@ asset_allocate_app.register_blueprint(fxdcomb_api)
 
 
 if __name__ == "__main__":
-    asset_allocate_app.run(port=8000, debug=True)
+    asset_allocate_app.run(port=33000, debug=True)
