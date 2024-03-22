@@ -131,7 +131,7 @@ class addSTD:
 
             # 添加 suffix_std 项
             std_argname = self.__var_argname.replace('var', 'std')
-            std = np.sqrt( bt_res[self.__var_argname] ) * np.sqrt(252)
+            std = np.sqrt( bt_res[self.__var_argname] )
             if np.isnan(std):
                 bt_res[std_argname] = np.float32(-1)
             else:
@@ -177,8 +177,8 @@ class addSharpe:
             
             _rtn = bt_res[self.__rtn_argname]
             _var = bt_res[self.__var_argname]
-            # 添加 sharpe 项
-            bt_res['sharpe'] = ( _rtn - self.__rf )/np.sqrt( _var )
+            # 添加 sharpe 项, 注意这里使用年化波动率
+            bt_res['sharpe'] = ( _rtn - self.__rf )/np.sqrt( _var * 252 )
 
             return bt_res
         
