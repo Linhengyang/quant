@@ -12,7 +12,8 @@ from Code.projs.asset_allocate.runner import *
 from Code.Utils.Decorator import (
     tagAttr2T,
     addAnnual,
-    addSTD
+    addSTD,
+    addSharpe
     )
 import numpy as np
 import typing as t
@@ -76,7 +77,7 @@ class benchmarkStrat:
         self.__details = []
 
     
-
+    @addSharpe(0.02, 'annual_rtn', 'var')
     @addAnnual('rtn', begindate, termidate)
     @tagAttr2T('dedilated')
     @addSTD('var')
