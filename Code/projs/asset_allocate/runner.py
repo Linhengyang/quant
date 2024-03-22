@@ -84,7 +84,6 @@ def mvopt():
 
 
     from Code.projs.asset_allocate.benchmark import benchmarkStrat
-    # from Code.projs.asset_allocate.meanvarOpt import meanvarOptStrat
     from Code.Strategy.LowFrequency.meanvarOpt import meanvarOptStrat
 
     stratg = meanvarOptStrat(inputs)
@@ -159,7 +158,6 @@ def riskmanage():
 
 
     from Code.projs.asset_allocate.benchmark import benchmarkStrat
-    # from Code.projs.asset_allocate.riskMng import riskMngStrat
     from Code.Strategy.LowFrequency.riskMng import riskMngStrat
 
     stratg = riskMngStrat(inputs)
@@ -233,7 +231,6 @@ def fixedcomb():
 
 
     from Code.projs.asset_allocate.benchmark import benchmarkStrat
-    # from Code.projs.asset_allocate.fixedComb import FxdCombStrat
     from Code.Strategy.LowFrequency.fixedComb import FxdCombStrat
 
     stratg = FxdCombStrat(inputs)
