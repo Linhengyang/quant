@@ -21,6 +21,7 @@ def cal_rtn_intervals(
         
         # 取出 某日到termidate（包括）的序号
         itv_ind_ = np.argwhere(hold_dates_arr >= int(first_day_getter(termidate)))
+        
         itv_rtn_arr = rtn_arr[itv_ind_]
         return np.prod(1+itv_rtn_arr) - 1
 

@@ -108,7 +108,7 @@ class meanvarOptStrat:
                 expt_tgt_value
                 )
             
-            if solve_res['solve_status'] in ('direct', 'qp_optimal'):
+            if solve_res['solve_status'] in ('direct', 'qp_optimal', 'lp_success'):
                 portf_w = solve_res['portf_w']
             elif solve_fail == 'use-last':
                 portf_w = portf_w_list[-1]
@@ -118,6 +118,14 @@ class meanvarOptStrat:
                     )
             
             portf_rtn_arr, early_stop, _ = basicBT_rtnarr_1prd(portf_w, hold_rtn_mat, cost)
+
+            if early_stop:
+                # 如果发生了early stop(即 小于 -1 的rtn发生了), 那么
+                # portf_rtn_arr 的长度必小于等于 hold_dates。考虑到benchmark的长度不变，用0作补全
+                portf_rtn_arr = np.pad(
+                    portf_rtn_arr, 
+                    (0, len(hold_dates) - len(portf_rtn_arr))
+                    )
 
             detail = {
                 'position_no': i+1,
@@ -249,7 +257,7 @@ class meanvarOptStrat:
         try:
             fin = MeanVarOpt(rtn_rates, cov_mat, constraints, assets_idlst)
             
-            res = fin(expt_tgt_value, mvo_target)
+            res = fin(expt_tgt_value, mvo_target, 0.02)
             
         except Exception as e:
             traceback.print_exc()

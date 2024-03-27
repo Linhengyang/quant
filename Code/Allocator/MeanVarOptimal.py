@@ -14,6 +14,7 @@
 import numpy as np
 import cvxopt
 import typing as t
+from scipy.optimize import linprog
 from Code.Utils.Type import basicPortfSolveRes
 from Code.Utils.Statistic import (
     multiCoLinear
@@ -36,7 +37,7 @@ class MeanVarOpt:
                  "__no_bounds", "__expct_rtn_rates", "__expct_cov_mat", 
                  "__solve_status", "__portf_w", "__portf_var", "__portf_rtn", 
                  "__cov_mat_inv", "__quad_term", "__const_term", "__lin_term", 
-                 "__norm_term", "__vertex", "__num_assets",
+                 "__norm_term", "__vertex", "__num_assets", "__tangency",
                  "__P", "__q", "__A", "__G", "__h", "__b")
 
 
@@ -83,7 +84,7 @@ class MeanVarOpt:
         var = 1/norm_term * (qua_term * r^2 - 2 * lin_term * r + cons_term )
         var = 1/d * (c * r^2 - 2 * a * r + b )
         d = norm_term
-        c = qua_term
+        c = quad_term
         a = lin_term
         b = cons_term
         '''
@@ -134,7 +135,32 @@ class MeanVarOpt:
         else: # 上下限都未给时，默认为无不等式约束
             self.__G = None
             self.__h = None
-    
+
+
+    def __build_riskf_tangt_line(self, riskf) -> None:
+        # 组建不等式约束的经典mean-var二次曲线，与无风险利率点的切线
+
+        ## 首先要建立经典rtn-std曲线(x轴是std，y轴是rtn)
+        ## 该曲线所有参数都可从 mean-var二次抛物线中得到
+
+        def std2rtn_curve(x: np.floating):
+
+            return self.__lin_term / self.__quad_term + \
+                np.sqrt(
+                    self.__norm_term / self.__quad_term * (np.power(x, 2) - 1.0/self.__quad_term)
+                    )
+        
+        ## 切点x坐标是 sqrt( 1/c * ( 1 + d/(a-rf)^2 ) ), 即sharpe最高时的波动率std
+        tangent_x = np.sqrt(
+            (1 + self.__norm_term / np.power(self.__lin_term - riskf, 2) )  /  \
+                                self.__quad_term
+        )
+
+        ## sharpe最大时的 std = tangent_x， rtn = std2rtn_curve(tangent_x)
+        self.__tangency = tangent_x, std2rtn_curve(tangent_x)
+
+
+
     @property
     def portf_rtn(self) -> np.floating:
         if self.__portf_rtn != np.float32(0):
@@ -162,6 +188,7 @@ class MeanVarOpt:
             return self.__solve_status
         else:
             raise NotImplementedError('solve status not obtained')
+
 
     @staticmethod
     def __cal_portf_w_unbounds_from_rtn(
@@ -344,13 +371,95 @@ class MeanVarOpt:
         self.__solve_status = "qp_" + qp_result['status']
 
 
+    # 不考虑不等式约束，直接得到sharpe最高时的 收益率r和protf权重
+    def __get_portf_unbounds_sharpe(
+            self,
+            riskf:np.floating) -> None:
+        
+        self.__build_riskf_tangt_line(riskf)
+
+        self.__portf_var = np.power( self.__tangency[0], 2)
+
+        self.__portf_rtn = self.__tangency[1]
+
+        self.__portf_w = self.__cal_portf_w_unbounds_from_rtn(
+            self.__portf_rtn,
+            self.__expct_rtn_rates,
+            self.__cov_mat_inv,
+            self.__norm_term,
+            self.__quad_term,
+            self.__lin_term,
+            self.__const_term
+        )
+
+        self.__solve_status = "direct"
+
+
+    # 考虑不等式约束，运用线性规划，找到离切点最近的上下两个可行域内的点，有更大斜率的端点就是解
+    def __get_portf_bounds_sharpe(
+            self,
+            riskf:np.floating) -> None:
+        
+        self.__build_riskf_tangt_line(riskf)
+
+        r_vec = self.__expct_rtn_rates.astype(np.float64)
+        # 切点上方
+        c_vec = r_vec
+        A_eq = np.expand_dims(np.ones_like(c_vec), axis=0)
+        b_eq = np.array([1.], dtype=np.float64)
+        A_ub = np.expand_dims(-c_vec, axis=0)
+        b_ub = np.array([-self.__tangency[1]], dtype=np.float64)
+        bounds = list( np.array([self.__low_constraints, self.__high_constraints]).T )
+
+        upper_result = linprog(c_vec, A_ub, b_ub, A_eq, b_eq, bounds)
+
+        # 切点下方
+        c_vec = -r_vec
+        A_ub = np.stack([r_vec, -r_vec], axis=0)
+        b_ub = np.array([self.__tangency[1], self.__vertex[1]], dtype=np.float64)
+
+        lower_result = linprog(c_vec, A_ub, b_ub, A_eq, b_eq, bounds)
+
+        ## 当且仅当两个都成功求解时，对比一下两个候选点，哪个的sharpe更大
+        ## 切点坐标是( std, rtn ) = (sqrt(x@cov@x), x@r)
+        
+        if upper_result.success and lower_result.success:
+            upper_sharpe = (upper_result.fun - riskf)/np.sqrt(upper_result.x @ self.__expct_cov_mat @ upper_result.x)
+            lower_sharpe = (lower_result.fun - riskf)/np.sqrt(lower_result.x @ self.__expct_cov_mat @ lower_result.x)
+
+            if upper_sharpe >= lower_sharpe:
+                result = upper_result
+            else:
+                result = lower_result
+        
+        elif upper_result.success:
+            result = upper_result
+        
+        elif lower_result.success:
+            result = lower_result
+        
+        else:
+            raise ValueError(f"wrong linear program with risk_free rate {riskf}")
+        
+
+        self.__portf_var = np.sqrt(result.x @ self.__expct_cov_mat @ result.x)
+
+        self.__portf_rtn = result.fun
+
+        self.__portf_w = result.x
+
+        self.__solve_status = "lp_success"
+
+
+
     def __call__(
             self,
             tgt_value: np.floating,
-            mode: str) -> basicPortfSolveRes:
+            mode: str,
+            riskf: np.floating) -> basicPortfSolveRes:
         
         # 计算模式
-        if mode not in ['minWave', 'maxReturn', 'sharp']:
+        if mode not in ['minWave', 'maxReturn', 'sharpe']:
             raise ValueError(
                 f'wrong mode for mean-variance optimal with {mode}'
                 )
@@ -364,8 +473,12 @@ class MeanVarOpt:
             self.__get_portf_unbounds_from_var(tgt_value)
         elif mode == 'maxReturn':
             self.__get_portf_bounds_from_var(tgt_value)
+        elif mode == 'sharpe' and self.__no_bounds:
+            self.__get_portf_unbounds_sharpe(riskf)
+        elif mode == 'sharpe':
+            self.__get_portf_bounds_sharpe(riskf)
         else:
-            raise NotImplementedError('mode sharp note implemented')
+            raise NotImplementedError('mode {mode} implemented')
         
         return {
             'portf_w': self.portf_w,
