@@ -3,7 +3,7 @@ import traceback
 import typing as t
 from typing import Any
 from operator import itemgetter
-
+from Code.Utils.Type import LowFrequencyStrategy
 from Code.Allocator.MeanVarOptimal import MeanVarOpt
 from Code.projs.asset_allocate.dataLoad import (
     get_train_hold_rtn_data, 
@@ -29,7 +29,7 @@ from Code.Utils.Type import basicPortfSolveRes
 
 
 
-class meanvarOptStrat:
+class meanvarOptStrat(LowFrequencyStrategy):
     '''
     attributes: 
         __inputs
@@ -155,30 +155,6 @@ class meanvarOptStrat:
         portf_rtn_arr = np.concatenate(portf_rtn_arr_lst)
 
         return BTeval_on_portfrtn(portf_rtn_arr)
-
-
-    @property
-    def details(self) -> list:
-        return self.__details
-
-
-
-    @property
-    def assets_idlst(self) -> list:
-        return self.__assets_idlst
-
-
-
-    @property
-    def flag(self) -> str:
-        return self.__flag
-
-
-
-
-    @property
-    def weights(self) -> list:
-        return self.__portf_w_list
 
 
 
