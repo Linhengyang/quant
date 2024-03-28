@@ -69,29 +69,6 @@ class LowFrequencyStrategy:
             'drawdown': np.floating
         '''
         pass
-
-
-    @property
-    def details(self) -> list:
-        return self.__details
-
-
-
-    @property
-    def assets_idlst(self) -> list:
-        return self.__assets_idlst
-
-
-
-    @property
-    def flag(self) -> str:
-        return self.__flag
-
-
-
-    @property
-    def weights(self) -> list:
-        return self.__portf_w_list
     
 
     def _get_data_params(self) -> t.Any:

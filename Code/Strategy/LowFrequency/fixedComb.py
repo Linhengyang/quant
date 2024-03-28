@@ -267,3 +267,26 @@ class FxdCombStrat(LowFrequencyStrategy):
             "solve_res": cur_res,
             "hold_rtn_mat": hold_rtn_mat
         }
+
+
+    @property
+    def details(self) -> list:
+        return self.__details
+
+
+
+    @property
+    def assets_idlst(self) -> list:
+        return self.__assets_idlst
+
+
+
+    @property
+    def flag(self) -> str:
+        return self.__flag
+
+
+
+    @property
+    def weights(self) -> list:
+        return self.__portf_w_list
